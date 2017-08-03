@@ -42,12 +42,14 @@ function getcIndex(headers) {
 	var cIndex = {};  // Column indexes
 	var numOfheaders = headers.length;
     for (var i = 0; i < numOfheaders; i++) {
-    	if ( sqftRegex.test( headers[i].innerText ) ) { cIndex.sqft = i; }
-    	else if ( rentRegex.test( headers[i].innerText ) ) { cIndex.rent = i; }
-    	else if ( dateRegex.test( headers[i].innerText ) ) { cIndex.date = i; }
-    	else if ( bathRegex.test( headers[i].innerText ) ) { cIndex.bath = i; }
-    	else if ( bedRegex.test( headers[i].innerText ) ) { cIndex.bed = i; }
-    	else if ( aptRegex.test( headers[i].innerText ) ) { cIndex.unit = i; }  // Leave this as the last one so "Unit Rent" won't be caught
+    	var thisText = headers[i].innerText.trim();
+    	if ( sqftRegex.test( thisText ) ) { cIndex.sqft = i; }
+    	else if ( rentRegex.test( thisText ) ) { cIndex.rent = i; }
+    	else if ( dateRegex.test( thisText ) ) { cIndex.date = i; }
+    	else if ( bathRegex.test( thisText ) ) { cIndex.bath = i; }
+    	else if ( bedRegex.test( thisText ) ) { cIndex.bed = i; }
+    	else if ( aptRegex.test( thisText ) ) { cIndex.unit = i; }  // Leave this as the last one so "Unit Rent" won't be caught
+    	else { cIndex[thisText] = i; }
     }
     return cIndex;
 }
@@ -781,6 +783,34 @@ else if ( document.querySelector("#floorplan-details,.floorplan-details") ) {
 	alert("Table's been added and selected, press ctrl+c and paste it into your google sheet.");
 }
 
+else if ( document.querySelector("#unit-filter-container") ) {
+	console.log("The http://www.myemeraldparkapartments.com/floorplans/#availabilities scraper is running");
+	var cIndex = getcIndex( document.querySelectorAll("th") );
+	var unitRows = document.querySelectorAll("tr.unit-row");
+	var numOfunitRows = unitRows.length;
+	var unitBubbles = document.querySelectorAll(".unit-popup");
+	if ( unitBubbles.length < numOfunitRows ) {
+		alert("Please close the unit information window over the map and run this again.");
+	}
+	else {
+		for (var i = 0; i < numOfunitRows; i++) {
+			var theseCells = unitRows[i].querySelectorAll("td");
+			info.push({
+				unit: theseCells[ cIndex.unit ].innerText,
+				beds: theseCells[ cIndex.bed ].innerText,
+				rent: theseCells[ cIndex.rent ].innerText,
+				sqft: unitBubbles[i].querySelector(".sq-ft").innerText.match(/[\d,]+/)[0].replace(",", ""),
+				baths: theseCells[ cIndex.bath ].innerText,
+				date: theseCells[ cIndex.date ].innerText
+			});
+		}
+		populateTable(info);
+		selectElementContents( table );
+		alert("Table's been added and selected, press ctrl+c and paste it into your google sheet.");
+	}
+}
+
+// THIS HAS AWFUL SELECTORS, SOMETHING MORE SPECIFIC NEEDS TO BE THE IF STATEMENT
 else if ( document.querySelectorAll(".section.group") ) {
 	console.log("Starting the http://watersedgeplano.com/ scraper.");
 	if ( /ascentvictorypark\.com/i.test(window.location.href) ){
@@ -825,4 +855,3 @@ else if ( document.querySelector("iframe,frame") ) {
 else {
 	alert("I\'m sorry. This website doesn\'t appear to have a scraper prepared for it yet.");
 }
-
