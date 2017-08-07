@@ -333,7 +333,9 @@ else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 	var unitrows = document.querySelectorAll('div.unit-row.js-unit-row');
 	var beds = document.querySelector('li.fp-stats-item.modal-beds span.stat-value').innerHTML;
 	var baths = document.querySelector('li.fp-stats-item.modal-baths span.stat-value').innerHTML;
-	var rent = document.querySelector('li.fp-stats-item.rent span.stat-value').innerHTML.match(/\$([\d,]+)\s?-?/i)[1];  // Used if the unit doesn't have a price
+	var rent = document.querySelector('li.fp-stats-item.rent span.stat-value');
+	if (rent) { rent = rent.innerHTML.match(/\$([\d,]+)\s?-?/i)[1]; }  // Used if the unit doesn't have a price
+	else { rent = "IDK???";	}
 	for (i = 0; i < unitrows.length; i++) {
 		var unitRent = unitrows[i].querySelector('div.unit-col.rent span.unit-col-text');
 		if ( unitRent != null ) {
@@ -436,6 +438,34 @@ else if ( document.querySelector('#beds_1_Content') ) {
 				date: unitinfo[1].innerHTML
 			});
 		}
+	}
+	populateTable(info);
+	selectElementContents( table );
+	alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
+}
+
+else if ( document.querySelector("#list-view") ) {
+	console.log("on-site scraper started");
+	var cIndex = getcIndex( document.querySelector('thead').querySelectorAll('th') );
+	var unitsFound = document.querySelectorAll("tr.unit_display");
+	var numOfunitsFound = unitsFound.length;
+	for (var j = 0; j < numOfunitsFound; j++) {
+		var unitInfo = unitsFound[j].querySelectorAll('td');
+		var bedbathsqft = unitsFound[j].closest(".floor_plan").querySelector(".floor_plan_size").innerText;
+		if ("bed" in cIndex) { var bed = unitInfo[ cIndex.bed ].innerText; }
+		else { var bed = bedbathsqft.match(bedNumRegex)[0]; }
+		if ("bath" in cIndex) { var bath = unitInfo[ cIndex.bath ].innerText; }
+		else { var bath = bedbathsqft.match(bathNumRegex)[0]; }
+		if ("sqft" in cIndex) { var sqft = unitInfo[ cIndex.sqft ].innerText; }
+		else { var sqft = bedbathsqft.match(sqftNumRegex)[0]; }
+		info.push({
+			unit: unitInfo[ cIndex.unit ].innerText,
+			beds: bed,
+			rent: unitInfo[ cIndex.rent ].innerText,
+			sqft: sqft,
+			baths: bath,
+			date: unitInfo[ cIndex.date ].innerText
+		});
 	}
 	populateTable(info);
 	selectElementContents( table );
