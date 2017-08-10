@@ -665,7 +665,7 @@ else if ( document.querySelector('.floorplan-tile h2') ) {
     alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
 }
 
-else if ( document.querySelector('.realpage,#fp_ollContainer') ) {
+else if ( document.querySelector('.realpage,#fp_ollContainer,[realpage-oll-widget="RealPage-OLL-Widget"]') ) {
 	// http://www.twincreekscrossing.com/apartments/tx/allen/classic#k=31023
 	scraper = "realpage";
 	var iframe = iframeRef( document.querySelector('iframe') );
