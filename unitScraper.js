@@ -52,6 +52,20 @@ function getcIndex(headers) {
     return cIndex;
 }
 
+// This hides the background that often gets in the way
+var spaceListener = false;
+function toggleVis(bgInWay) {
+	if (bgInWay && !spaceListener) {
+		alert("There might be an element in the way of your table, if so, click the space bar to toggle its visibility.");
+		spaceListener = true;
+		document.addEventListener('keydown', function(event) {
+			if (event.code == 'Space') {
+				bgInWay.style.visibility = (bgInWay.style.visibility == "hidden") ? "visible" : "hidden";
+			}
+		});
+	}
+}
+
 // This function creates the table to display the scraped information
 var table = document.createElement('table');
 function populateTable(info) {
@@ -318,6 +332,7 @@ else if ( document.querySelector('.rent-value') ) {
 	populateTable(info);
 	selectElementContents( table );
 	alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet. By the way, it likely caught every floor plan. There's no need to open and copy each one." );
+	toggleVis(document.querySelector("#App"));
 }
 
 else if ( document.querySelector('div.unit-row.js-unit-row') ) {
@@ -347,18 +362,7 @@ else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 		});
 	}
 	populateTable(info);
-
-	// This hides the background that often gets in the way
-	var bgInWay = document.querySelector(".fullwidth-container");
-	if (bgInWay && typeof spaceListener === 'undefined') {
-		alert("There might be an element in the way of your table, if so, click the space bar to toggle its visibility.");
-		var spaceListener = true;
-		document.addEventListener('keydown', function(event) {
-			if (event.code == 'Space') {
-				bgInWay.style.visibility = (bgInWay.style.visibility == "hidden") ? "visible" : "hidden";
-			}
-		});
-	}
+	toggleVis(document.querySelector(".fullwidth-container"));
 
 }
 
