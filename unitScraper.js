@@ -480,7 +480,7 @@ else if ( document.querySelector("#list-view") ) {
 
 else if ( document.querySelector('#availableFloorplansmsg') ) {
 	// http://www.platinumcastlehills.com/Floor-plans.aspx
-	// http://www.residenceatarlington.com/Floor-plans.aspx <- Haven't gotten this website working properly yet
+	// http://www.residenceatarlington.com/Floor-plans.aspx
 	var floorplans = document.querySelectorAll('.floorplan-block');
 	for (i = 0; i < floorplans.length; i++) {
 		var floorplaninfo = floorplans[i].querySelectorAll('.specification li strong,.specification>span>span');
@@ -500,14 +500,16 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 				}
 			}
 		}
-		for (j = 1; j < unitrows.length; j++) {
+		for (j = 0; j < unitrows.length; j++) {
+			if ( unitrows[j].querySelector("th") ) { continue; }
 			var unitinfo = unitrows[j].querySelectorAll('td,.unit-container>div>div');
-			unitinfo[3].innerText = unitinfo[3].innerText.replace(/[$,]/gi,"");
-			if( isNaN(unitinfo[3].innerText) ) { unitinfo[3].innerHTML = floorplaninfo[3].innerHTML; }
+			if ( /\$/.test(unitinfo[3].innerText) ) { var unitRent = unitinfo[3].innerText.replace(/[$,]/gi,""); }
+			else { var unitRent = unitinfo[4].innerText.replace(/[$,]/gi,""); }
+			if ( isNaN(unitRent) ) { unitRent = floorplaninfo[3].innerHTML; }
 			info.push({
 				unit: unitinfo[0].innerHTML.replace(/Unit\s\#?/i, ""),
 				beds: bed,
-				rent: unitinfo[3].innerHTML,
+				rent: unitRent,
 				sqft: unitinfo[1].innerHTML.replace(sqftRegex, ""),
 				baths: bath,
 				date: unitinfo[2].innerText.replace(/Available:?\s?/i, "")
@@ -516,7 +518,7 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 	}
 	populateTable(info);
 	selectElementContents( table );
-	alert("WARNING: This scraper is potentially broken.");
+	// alert("WARNING: This scraper is potentially broken.");
 	alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
 }
 
