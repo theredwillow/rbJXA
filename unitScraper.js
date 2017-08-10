@@ -897,14 +897,13 @@ else if ( document.querySelector("#unit-filter-container") ) {
 	}
 }
 
-// THIS HAS AWFUL SELECTORS, SOMETHING MORE SPECIFIC NEEDS TO BE THE IF STATEMENT
-else if ( document.querySelectorAll(".section.group") ) {
-	scraper = "watersedge";
+else if ( document.querySelector("#ContentPlaceHolder1_gvFloorPlans") ) {
+	scraper = "watersedgeplano.com";
 	if ( /ascentvictorypark\.com/i.test(window.location.href) ){
 		alert('This particular website is dumb, redirecting you to their realpage.');
 		window.location.href = "https://4695035.onlineleasing.realpage.com/#k=49064";
 	}
-	var fpTables = document.querySelectorAll(".section.group");
+	var fpTables = document.querySelectorAll(".section.group");  // This was the old if selector
 	var numOffpTables = fpTables.length;
 	for (var i = 0; i < numOffpTables; i++) {
 		var thesefpTables = fpTables[i].querySelectorAll(".rowclass");
