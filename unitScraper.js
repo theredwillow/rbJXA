@@ -704,6 +704,7 @@ else if ( document.querySelector('.FloorPlansV1') ) {
 	var unitLength = activeUnits.length;
 	for (i = 0; i < unitLength; i++) {
 		var unitCells = activeUnits[i].querySelectorAll('td');
+		var rent = fpRent;
 		if (unitCells.length > 4) {
 			var unitRent = unitCells[5].innerText.match(/\$([\d,]{2,})/);
 			if (unitRent) { rent = unitRent[0]; }
