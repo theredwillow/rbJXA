@@ -696,13 +696,18 @@ else if ( document.querySelector('.FloorPlansV1') ) {
 	var unitInfo = fpwidget.querySelector('.fpw_fpSelectButtonActive .fpw_fpSelectButton_fpDetails').innerText;
 	var beds = fpwidget.querySelector('.fpw_col3head_fpDetails').innerText.match(bedNumRegex)[0];
 	var baths = unitInfo.match(bathNumRegex)[0];
-	var sqft = unitInfo.match(/[\d,]{2,}/)[0];
-	var rent = unitInfo.match(/\$([\d,]{2,})/)[1];
+	var sqft = unitInfo.match(sqftNumRegex)[0];
+	var fpRent = unitInfo.match(/\$([\d,]{2,})/);
+	if (fpRent) { fpRent = fpRent[1]; }
 
 	var activeUnits = fpwidget.querySelectorAll('.fpw_avUnit_table');
 	var unitLength = activeUnits.length;
 	for (i = 0; i < unitLength; i++) {
 		var unitCells = activeUnits[i].querySelectorAll('td');
+		if (unitCells.length > 4) {
+			var unitRent = unitCells[5].innerText.match(/\$([\d,]{2,})/);
+			if (unitRent) { rent = unitRent[0]; }
+		}
 		info.push({
 			unit: unitCells[0].innerText.replace("Apt: ", ""),
 			beds: beds,
