@@ -56,7 +56,7 @@ function getcIndex(headers) {
 var spaceListener = false;
 function toggleVis(bgInWay) {
 	if (bgInWay && !spaceListener) {
-		alert("There might be an element in the way of your table, if so, click the space bar to toggle its visibility.");
+		alert("There *might* be an element in the way of your table. If so, click the space bar to toggle its visibility.");
 		spaceListener = true;
 		document.addEventListener('keydown', function(event) {
 			if (event.code == 'Space') {
@@ -82,7 +82,7 @@ function populateTable(info) {
 		if( info[i].unit.length > minLength ){ minLength = info[i].unit.length; }
 	}
 
-	console.log(info.length, "units found, adding table to bottom. -KM Scraper");
+	console.log(info.length, "units found, adding table to bottom. -" + scraper + " Scraper");
 	for (i = 0; i < info.length; i++) {
 
 		var unitId = "kmScraper" + info[i].unit.trim().replace(/\s/gi,"");
@@ -183,9 +183,11 @@ var bathNumRegex = new RegExp(/[\d.]+(?=(?:\s|(?:&nbsp;))?bath)/gi);
 var sqftNumRegex = new RegExp(/[\d,.]+(?=(?:\s|(?:&nbsp;))?sq?.*?f.*?t?)/gi);
 
 var info = [];
+var scraper;
 //THIS PART FINDS WHICH FUNCTION TO CALL
 if( document.querySelector('.center-for-reals') ) {
 	// EXAMPLE: https://www.cwsapartments.com/apartments/tx/grapevine/marquis-silver-oaks/floor-plans#k=87211
+	scraper = "cws";
 	var iframe = iframeRef( document.querySelector('iframe') );
 	var units = iframe.querySelectorAll('.table tbody tr');
 
@@ -208,6 +210,7 @@ if( document.querySelector('.center-for-reals') ) {
 
 else if ( document.querySelector('table.fpSelectedItem label') ) {
 	// AMLI
+	scraper = "amli";
 	var labels = document.body.querySelectorAll('table.fpSelectedItem span>label');
 	var [bed, bath] = labels[0].innerHTML.split(", ");
 	bed = bed.replace(bedRegex, "");
@@ -232,6 +235,7 @@ else if ( document.querySelector('table.fpSelectedItem label') ) {
 
 else if ( document.querySelector('div.result') ) {
 	// http://grandcourtyards.maac.com/#available-apartments
+	scraper = "maac";
 	var listing = document.querySelectorAll('div.result');
 	for (i = 0; i < listing.length; i++) {
 		var lifinder = listing[i].querySelectorAll('li');
@@ -252,6 +256,7 @@ else if ( document.querySelector('div.result') ) {
 
 else if ( document.querySelector('div.iui-cards-floorplan-details') ) {
 	// http://www.ariosoliving.com/apartments/tx/grand-prairie/floor-plans
+	scraper = "ariosoliving";
 	var floorplan = document.querySelector('div.iui-cards-floorplan-details');
 	var beds = floorplan.querySelector('div.unit-beds').querySelector('span').innerHTML;
 	var baths = floorplan.querySelector('div.unit-baths').querySelector('span').innerHTML;
@@ -275,6 +280,7 @@ else if ( document.querySelector('div.iui-cards-floorplan-details') ) {
 
 else if ( document.querySelector('p.floorplaninfotext') ) {
 	// https://www.gables.com/communities/texas/plano/junction-15/
+	scraper = "gables";
 	var floorplan = document.querySelectorAll('p.floorplaninfotext');
 	var beds = floorplan[0].innerHTML.match(/[\d.]+/g)[0].replace(/<.*?>/gi, "");
 	var baths = floorplan[1].innerHTML.match(/[\d.]+/g)[0].replace(/<.*?>/gi, "");
@@ -298,6 +304,7 @@ else if ( document.querySelector('p.floorplaninfotext') ) {
 
 else if ( document.querySelector('.ul_units li') ) {
 	// http://www.ovationatlewisville.com/floorplans
+	scraper = "ovationatlewisville";
 	var floorplan = document.querySelectorAll('.ul_units li');
 	for (i = 0; i < floorplan.length; i++) {
 		var floorplanTable = floorplan[i].parentNode.parentNode.querySelector('.unitdetails');
@@ -316,7 +323,7 @@ else if ( document.querySelector('.ul_units li') ) {
 
 else if ( document.querySelector('.rent-value') ) {
 	// https://s2capital.myresman.com/Portal/Applicants/Availability?a=1080&p=194d2a20-9e27-4f24-96ab-5dd04a852882
-	console.log("S2 Capital scraper running");
+	scraper = "s2capital";
 	var units = document.body.querySelectorAll('div.unit');
 	for (i = 0; i < units.length; i++) {
 		var spans = units[i].querySelectorAll('.fw .fv');
@@ -337,7 +344,7 @@ else if ( document.querySelector('.rent-value') ) {
 
 else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 	// http://www.montecitoclub.com/Apartments/module/property_info/property%5Bid%5D/262177/tab/1/
-
+	scraper = "montecitoclub";
 	var unitrows = document.querySelectorAll('div.unit-row.js-unit-row');
 	var beds = document.querySelector('li.fp-stats-item.modal-beds span.stat-value').innerHTML;
 	var baths = document.querySelector('li.fp-stats-item.modal-baths span.stat-value').innerHTML;
@@ -368,6 +375,7 @@ else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 
 else if ( document.querySelector('.available-units-list li.unit-list-item') ) {
 	// http://originatfriscobridges.com/floor-plans/
+	scraper = "friscobridges";
 	var unitrows = document.querySelectorAll('.available-units-list li.unit-list-item:not(.black)');
 	var floorplaninfo = document.querySelectorAll('.plan-details-list li');
 	var bedsbaths = floorplaninfo[0].querySelector('.black').innerHTML;
@@ -391,7 +399,7 @@ else if ( document.querySelector('.available-units-list li.unit-list-item') ) {
 
 else if ( document.querySelector('#RentCafeContent') ) {
 	// http://www.westdale-hills.com/availableunits.aspx?myOlePropertyId=47087&MoveInDate=&t=0.7749214425958568
-
+	scraper = "rentcafe";
 	var url = window.location.href;
 	if( /[&?]f.+p.+\=.*(\&|$)/i.test(url) ) {
 		alert("I don't think this page has all the floorplans. I'm redirecting you. Please try scraping again once you land there.");
@@ -430,6 +438,7 @@ else if ( document.querySelector('#RentCafeContent') ) {
 
 else if ( document.querySelector('#beds_1_Content') ) {
 	// http://www.bellapartmentliving.com/tx/dallas/oak-forest/floor-plans-pricing.asp#beds_all
+	scraper = "bell";
 	var floorplans = document.querySelectorAll('.fpItem');
 	for (i = 0; i < floorplans.length; i++) {
 		var floorplaninfo = floorplans[i].querySelector('.fpRent').innerHTML;
@@ -455,7 +464,7 @@ else if ( document.querySelector('#beds_1_Content') ) {
 }
 
 else if ( document.querySelector("#list-view") ) {
-	console.log("on-site scraper started");
+	scraper = "on-site";
 	var cIndex = getcIndex( document.querySelector('thead').querySelectorAll('th') );
 	var unitsFound = document.querySelectorAll("tr.unit_display");
 	var numOfunitsFound = unitsFound.length;
@@ -485,6 +494,7 @@ else if ( document.querySelector("#list-view") ) {
 else if ( document.querySelector('#availableFloorplansmsg') ) {
 	// http://www.platinumcastlehills.com/Floor-plans.aspx
 	// http://www.residenceatarlington.com/Floor-plans.aspx
+	scraper = "leasestar";
 	var floorplans = document.querySelectorAll('.floorplan-block');
 	for (i = 0; i < floorplans.length; i++) {
 		var floorplaninfo = floorplans[i].querySelectorAll('.specification li strong,.specification>span>span');
@@ -541,10 +551,12 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 	selectElementContents( table );
 	// alert("WARNING: This scraper is potentially broken.");
 	alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
+	toggleVis(document.querySelector("#form"));
 }
 
 else if ( document.querySelector('.available-apartment-card') ) {
 	// https://www.camdenliving.com/irving-tx-apartments/camden-valley-park/apartments
+	scraper = "camdenliving";
 	var floorplansFound = document.querySelectorAll('.available-apartment-card');
 	var numOffloorplansFound = floorplansFound.length;
 	for (var i = 0; i < numOffloorplansFound; i++) {
@@ -577,6 +589,7 @@ else if ( document.querySelector('.available-apartment-card') ) {
 
 else if ( document.querySelector(".mainContent .floorplanDetail") ) {
 	// http://thekelton.com/floorplans/detail/S1
+	scraper = "kelton";
 	var floorplan = document.querySelector(".mainContent .floorplanDetail");
 	var floorplaninfo = floorplan.querySelector("p").innerText;
 	var beds = floorplaninfo.match(bedNumRegex)[0];
@@ -603,6 +616,7 @@ else if ( document.querySelector(".mainContent .floorplanDetail") ) {
 
 else if ( document.querySelector('.floorplan_single_wrap') ) {
 	// http://livethealexan.com/floorplans/the-ellum/
+	scraper = "alexan";
 	var fpInfo = qsAllProp( document.querySelectorAll('.fps_info_details,.fps_title h2,.fps_title h3') );
 	var beds = fpInfo.match(bedNumRegex)[0];
 	var baths = fpInfo.match(bathNumRegex)[0];
@@ -629,6 +643,7 @@ else if ( document.querySelector('.floorplan_single_wrap') ) {
 
 else if ( document.querySelector('.floorplan-tile h2') ) {
 	// UDR
+    scraper = "udr";
     var bedbath = document.querySelector('.information').innerText.split(", ");
     var bed = bedbath[0].replace(/\s.*/, "");
     var bath = bedbath[1].replace(/\s.*/, "");
@@ -652,6 +667,7 @@ else if ( document.querySelector('.floorplan-tile h2') ) {
 
 else if ( document.querySelector('.realpage,#fp_ollContainer') ) {
 	// http://www.twincreekscrossing.com/apartments/tx/allen/classic#k=31023
+	scraper = "realpage";
 	var iframe = iframeRef( document.querySelector('iframe') );
 	var floorplans = iframe.querySelectorAll('.search-row .search-results');
 	var numOffloorplans = floorplans.length;
@@ -688,6 +704,7 @@ else if ( document.querySelector('.realpage,#fp_ollContainer') ) {
 
 else if ( document.querySelector('.mfp-iframe') ) {
 	// http://www.emersonfrisco.com/floorplans/
+	scraper = "emersonfrisco";
 	var thisfloorplan = iframeRef( document.querySelector('iframe') );
 
 	var fpInfo = thisfloorplan.querySelector('.fpContainer').innerText;
@@ -714,6 +731,7 @@ else if ( document.querySelector('.mfp-iframe') ) {
 }
 
 else if ( document.querySelector('.FloorPlansV1') ) {
+	scraper = "fpwidget";
 	var fpwidget = document.querySelector('#fp_widget');
 
 	var unitInfo = fpwidget.querySelector('.fpw_fpSelectButtonActive .fpw_fpSelectButton_fpDetails').innerText;
@@ -748,6 +766,7 @@ else if ( document.querySelector('.FloorPlansV1') ) {
 
 else if ( document.querySelector(".mbl-pad") ) {
 	// http://www.emerybayapartments.com/
+	scraper = "emerybay";
 	var floorplans = document.querySelectorAll(".mbl-pad");
 	var numOffloorplans = floorplans.length;
 	for (var i = 0; i < numOffloorplans; i++) {
@@ -777,6 +796,7 @@ else if ( document.querySelector(".mbl-pad") ) {
 
 else if ( document.querySelector("#cfaUnitResultsTable") ) {
 	// http://property.onesite.realpage.com/ol2/(S(lcdw2fwimosldonlnl4fkwyr))/sites/esignature_rms/default.aspx?siteID=3834999
+	scraper = "onesite";
 	var cIndex = getcIndex( document.querySelector("#cfaUnitResultsTable").querySelectorAll("th") );
 	var unitRows = document.querySelectorAll("tr.ExactMatchedApartments,tr.OtherMatchedApartments");
 	for (i = 0; i < unitRows.length; i++) {
@@ -799,6 +819,7 @@ else if ( document.querySelector("#cfaUnitResultsTable") ) {
 
 else if ( document.querySelector('td.fp_opt') ) {
 	// http://venterraliving.com/ilume/rent_pricing_availability?beds=&price=&plan=A1&date=2017%2F07%2F11&PromoCode=&extid=TX4IL&cid=3465&REQUEST=%3C%3Fxml+version%3D%271.0%27+encoding%3D%27UTF-8%27%3F%3E%0D%0A%3CUnitAvailRequest%3E%0D%0A%09%3CCommunity+ExternalId%3D%27TX4IL%27%3E%0D%0A%09%09%3CCriteria%3E%0D%0A%09%09%09%3CBedrooms%3E%3C%2FBedrooms%3E%0D%0A%09%09%09%3CMaxPrice%3E%3C%2FMaxPrice%3E%0D%0A%09%09%09%3CMoveInDate%3E2017%2F07%2F11%3C%2FMoveInDate%3E%0D%0A%09%09%09%3CFloorPlanId%3EA1%3C%2FFloorPlanId%3E%0D%0A%09%09%09%3CAmenityIds%3E%3C%2FAmenityIds%3E%0D%0A%09%09%09%3CPromoCode%3E%3C%2FPromoCode%3E%0D%0A%09%09%3C%2FCriteria%3E%0D%0A%09%3C%2FCommunity%3E%0D%0A%3C%2FUnitAvailRequest%3E
+	scraper = "venterra";
 	var unittable = document.querySelectorAll('#floorplans tr');
 	var numofUnitTable = unittable.length;
 	for (i = 0; i < numofUnitTable; i++) {
@@ -824,6 +845,7 @@ else if ( document.querySelector('td.fp_opt') ) {
 
 else if ( document.querySelector("#floorplan-details,.floorplan-details") ) {
 	// http://thebrickyardapts.com/floorplans/detail/THA1
+	scraper = "brickyards";
 	var fpInfo = document.querySelector("#floorplan-details p,.floorplan-details p").innerText;
 	var bed = fpInfo.match(bedNumRegex)[0];
 	var bath = fpInfo.match(bathNumRegex)[0];
@@ -849,7 +871,7 @@ else if ( document.querySelector("#floorplan-details,.floorplan-details") ) {
 }
 
 else if ( document.querySelector("#unit-filter-container") ) {
-	console.log("The http://www.myemeraldparkapartments.com/floorplans/#availabilities scraper is running");
+	scraper = "emerald";
 	var cIndex = getcIndex( document.querySelectorAll("th") );
 	var unitRows = document.querySelectorAll("tr.unit-row");
 	var numOfunitRows = unitRows.length;
@@ -877,7 +899,7 @@ else if ( document.querySelector("#unit-filter-container") ) {
 
 // THIS HAS AWFUL SELECTORS, SOMETHING MORE SPECIFIC NEEDS TO BE THE IF STATEMENT
 else if ( document.querySelectorAll(".section.group") ) {
-	console.log("Starting the http://watersedgeplano.com/ scraper.");
+	scraper = "watersedge";
 	if ( /ascentvictorypark\.com/i.test(window.location.href) ){
 		alert('This particular website is dumb, redirecting you to their realpage.');
 		window.location.href = "https://4695035.onlineleasing.realpage.com/#k=49064";
