@@ -501,18 +501,35 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 			}
 		}
 		for (j = 0; j < unitrows.length; j++) {
-			if ( unitrows[j].querySelector("th") ) { continue; }
+			var headers = unitrows[j].querySelectorAll("th");
+			if (headers.length) {
+				var cIndex = getcIndex(headers);
+				var cIndexGiven = true;
+				continue;
+			}
 			var unitinfo = unitrows[j].querySelectorAll('td,.unit-container>div>div');
-			if ( /\$/.test(unitinfo[3].innerText) ) { var unitRent = unitinfo[3].innerText.replace(/[$,]/gi,""); }
-			else { var unitRent = unitinfo[4].innerText.replace(/[$,]/gi,""); }
-			if ( isNaN(unitRent) ) { unitRent = floorplaninfo[3].innerHTML; }
+
+			if (!cIndexGiven) {
+				var cIndex = {
+					"unit": 0,
+					"sqft": 1,
+					"date": 2
+				};
+				if ( /\$/.test(unitinfo[3].innerText) ) { cIndex.rent = 3; }
+				else { cIndex.rent = 4; }
+			}
+
+			var unitRent = unitinfo[cIndex.rent];
+			if (unitRent) { unitRent = unitRent.innerText.replace(/[$,]/gi,""); }
+			if ( !unitRent || isNaN(unitRent) ) { unitRent = floorplaninfo[3].innerHTML; }
+			
 			info.push({
-				unit: unitinfo[0].innerHTML.replace(/Unit\s\#?/i, ""),
+				unit: unitinfo[cIndex.unit].innerText.replace(/Unit\s\#?/i, ""),
 				beds: bed,
 				rent: unitRent,
-				sqft: unitinfo[1].innerHTML.replace(sqftRegex, ""),
+				sqft: unitinfo[cIndex.sqft].innerText.replace(sqftRegex, ""),
 				baths: bath,
-				date: unitinfo[2].innerText.replace(/Available:?\s?/i, "")
+				date: unitinfo[cIndex.date].innerText.replace(/Available:?\s?/i, "")
 			});
 		}
 	}
