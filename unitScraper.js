@@ -32,9 +32,7 @@ function findAncestor (el, cls) {
 
 // This function is used to get DOM from an iframe
 function iframeRef(frameRef) {
-    return frameRef.contentWindow
-        ? frameRef.contentWindow.document
-        : frameRef.contentDocument
+    return frameRef.contentWindow ? frameRef.contentWindow.document : frameRef.contentDocument;
 }
 
 // This function is used to create a "column index", it lets the script know where to find information in an HTML table via its headers
@@ -95,7 +93,6 @@ function populateTable(info) {
 			else { warning += "-Unit " + info[i].unit + ": rent not a number\n"; }
 			var rent = document.createTextNode(info[i].rent);
 			if (info[i].rent == info[i].sqft) { warning += "-Unit " + info[i].unit + ": sqft equals rent\n"; }
-			
 			td3.appendChild(rent);
 
 			var td4 = document.createElement('td');
@@ -326,10 +323,6 @@ else if ( document.querySelector('.rent-value') ) {
 else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 	// http://www.montecitoclub.com/Apartments/module/property_info/property%5Bid%5D/262177/tab/1/
 
-	// This hides the background that often gets in the way
-	var bgInWay = document.querySelector(".fullwidth-container");
-	if (bgInWay) { bgInWay.style.visibility = "hidden"; }
-
 	var unitrows = document.querySelectorAll('div.unit-row.js-unit-row');
 	var beds = document.querySelector('li.fp-stats-item.modal-beds span.stat-value').innerHTML;
 	var baths = document.querySelector('li.fp-stats-item.modal-baths span.stat-value').innerHTML;
@@ -354,6 +347,19 @@ else if ( document.querySelector('div.unit-row.js-unit-row') ) {
 		});
 	}
 	populateTable(info);
+
+	// This hides the background that often gets in the way
+	var bgInWay = document.querySelector(".fullwidth-container");
+	if (bgInWay && typeof spaceListener === 'undefined') {
+		alert("There might be an element in the way of your table, if so, click the space bar to toggle its visibility.");
+		var spaceListener = true;
+		document.addEventListener('keydown', function(event) {
+			if (event.code == 'Space') {
+				bgInWay.style.visibility = (bgInWay.style.visibility == "hidden") ? "visible" : "hidden";
+			}
+		});
+	}
+
 }
 
 else if ( document.querySelector('.available-units-list li.unit-list-item') ) {
