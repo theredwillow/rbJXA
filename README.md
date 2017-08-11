@@ -24,3 +24,4 @@ Default Column Order: Unit	Bed	Rent	SQFT	Bath	Date
 #### Starlord requirements
 * Until I fix it, have these columns selected in display before you first run the script
 "Status    Address    Apt #    Owner    #Bdrm    Rent    Sq. Footage    #Bthrms    Phone    Owner Pays    Date Available    Last Updated    Modified By    Origin Source    Star Lord    Listing Summary"
+* Until I fix it, keep only one chrome window open at a time
