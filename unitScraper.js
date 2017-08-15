@@ -474,7 +474,11 @@ else if ( document.querySelector("#list-view") ) {
 		if ("bed" in cIndex) { var bed = unitInfo[ cIndex.bed ].innerText; }
 		else { var bed = bedbathsqft.match(bedNumRegex)[0]; }
 		if ("bath" in cIndex) { var bath = unitInfo[ cIndex.bath ].innerText; }
-		else { var bath = bedbathsqft.match(bathNumRegex)[0]; }
+		else {
+			var bath = bedbathsqft.match(bathNumRegex);
+			if (bath) { bath = bath[0]; }
+			else { bath = "1"; }
+		}
 		if ("sqft" in cIndex) { var sqft = unitInfo[ cIndex.sqft ].innerText; }
 		else { var sqft = bedbathsqft.match(sqftNumRegex)[0]; }
 		info.push({
