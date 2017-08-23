@@ -160,31 +160,6 @@ function loopThruOldCells(funcStringToExec, otherFuncs) {
 		+ otherFuncs.afterCells, otherFuncs);
 }
 
-function getOldRecords() {
-	var declareOldRecords = ` var oldRecords = []; `;
-	var jsFuncToDo = `
-		oldRecords.push({
-            unit: recordCells[cIndex.unit].innerText,
-            bed: recordCells[cIndex.bed].innerText,
-            rent: recordCells[cIndex.rent].innerText,
-            sqft: recordCells[cIndex.sqft].innerText,
-            bath: recordCells[cIndex.bath].innerText,
-            date: recordCells[cIndex.date].innerText,
-            owner: recordCells[cIndex.owner].innerText,
-            origin: recordCells[cIndex.origin].innerText,
-            status: recordCells[cIndex.status].innerText,
-            starlord: recordCells[cIndex.starlord].innerText,
-            updated: recordCells[cIndex.updated].innerText
-		});
-	`;
-	var returnOldRecords = ` return oldRecords; `;
-	return chrome.execute( starLord.tab,
-		{ javascript: loopThruOldRows( jsFuncToDo,
-			{ beforeRows: declareOldRecords, afterRows: returnOldRecords } )
-		}
-	);
-}
-
 function applyBulkAction(actionToDo) {
 	openTab(starLord);
     // chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
@@ -235,133 +210,6 @@ function selectAll(selectOrUnselect) {
 		}
 	`;
 	chrome.execute(starLord.tab, { javascript: loopThruOldRows(jsFuncToDo, { beforecIndex: firstClick}) });
-}
-
-function findLatestListing() {
-	openTab(starLord);
-	var declareLatestDate = ` var latestDate = { date: "" }; `;
-	var jsFuncToDo = `
-		var dateFound = fromRBDate( recordCells[cIndex.updated].innerText );
-		if ( dateFound > latestDate.date && recordCells[cIndex.owner].innerText == "` + propertyBeingUpdated + `" ) {
-			latestDate = {
-				"date": dateFound,
-				"i": i
-			};
-			var flagMultiple = false;
-		}
-		else if ( dateFound.getTime() === latestDate.date.getTime() ) {
-			flagMultiple = true;
-		}
-	`;
-	var getLatest = `
-		if ( flagMultiple ) { latestDate.i = "ERROR";	}
-		return latestDate.i;
-	`;
-	var latestDate = chrome.execute( starLord.tab,
-		{ javascript: loopThruOldRows( jsFuncToDo,
-			{ beforecIndex: fromRBDate, beforeRows: declareLatestDate, afterRows: getLatest } )
-		}
-	);
-	if ( latestDate == "ERROR" ) {
-		throwError("I can't find the most recently edited listing, so I don't know what to mark as the source.");
-	}
-	return latestDate;
-}
-
-function getListingsFromText() {
-	// NEED TO CREATE A WARNING ABOUT DUPLICATE LISTINGS
-	// NEED TO THROWERROR IF MISSING ANY HEADERS
-	openTab(slSheet);
-	delay(0.25);
-	var text;
-	var visit = 0;
-	(function getAllText() {
-	    press("home cmd");
-	    delay(0.25);
-	    press("all copy");
-	    delay(0.25);
-	    text = chrome.theClipboard();
-	    // chrome.displayAlert('text', { message: JSON.stringify( text ) });
-	    if( !/\t/.test(text) ){
-	    	if ( visit < 1 ) {
-	    		press("return");
-	    		visit++;
-	    		getAllText();
-	    	}
-	    	else { throwError("There was an error while trying to grab the new listings. Are they entered into the sheet for Star Lord properly?"); }
-	    }
-	})();
-
-    var cIndex = {};
-    var newListings = [];
-    var rows = text.split(/\r/gm);
-    // chrome.displayAlert('rows', { message: JSON.stringify( rows ) });
-    for ( var i = 0; i < rows.length; i++ ) {
-        var cells = rows[i].split(/\t/g);
-        // chrome.displayAlert('cells', { message: "Row " + i + ": " + JSON.stringify( cells ) });
-        if ( i == 0 ) {
-            for (var j = 0; j < cells.length; j++) {
-                if ( /unit|ap.*t|num/i.test(cells[j]) ) { cIndex.unit = j; }
-                else if ( /be?d/i.test(cells[j]) ) { cIndex.bed = j; }
-                else if ( /rent|cost|starting|price/i.test(cells[j]) ) { cIndex.rent = j; }
-                else if ( /sq.*?fe?e?t/i.test(cells[j]) ) { cIndex.sqft = j; }
-                else if ( /ba/i.test(cells[j]) ) { cIndex.bath = j; }
-                else if ( /date|avail/i.test(cells[j]) ) { cIndex.date = j; }
-            }
-            if( !('unit' in cIndex) || !('bed' in cIndex) || !('rent' in cIndex) || !('sqft' in cIndex) || !('bath' in cIndex) || !('date' in cIndex) ) {
-                throwError("Please put headers into the spreadsheet so I can tell what's the rent, unit number, etc...");
-            }
-        }
-        else {
-            if ( /call/i.test(cells[cIndex.rent]) ){
-                throwError("At least one of the listings that you're updating is a call for price. Please revise, then retry this script.");
-            }
-            var rentFound = Number( cells[ cIndex.rent ].match(/[\d.,]+/)[0].replace(",", "") ).toFixed(0);
-            if (rentFound < 100) {
-            	chrome.displayDialog('There is a rent of ' + rentFound + ', are you sure that\'s right?');
-            }
-            var sqftFound = Number(cells[ cIndex.sqft ].match(/[\d.,]+/)[0].replace(",",""));
-            if (sqftFound < 100) {
-            	chrome.displayDialog('There is a sqft of ' + sqftFound + ', are you sure that\'s right?');
-            }
-            var bedFound = cells[ cIndex.bed ].match(/[\d.]+|s(tudio)?|c(onvertible)?/i)[0].replace(/^0$/,"Studio");
-            if( !isNaN(bedFound) ) {
-            	bedFound = Number(bedFound);
-            	if ( bedFound > 4 ) {
-            		chrome.displayDialog('There is a unit with ' + bedFound + ' beds, are you sure that\'s right?');
-            	}
-            }
-            var bathFound = Number( cells[ cIndex.bath ].match(/[\d.]+/)[0] ).toFixed(1);
-            if ( (bathFound < 1) || (bathFound > 3) || (bathFound % 1 != 0 && (bathFound - 0.5) % 1 != 0) ) {
-            	chrome.displayDialog('There is a unit with ' + bathFound + ' bathrooms, are you sure that\'s right?');
-            }
-
-            newListings.push( {
-                unit: cells[ cIndex.unit ].replace(/^[^\d]*?[\#\s]+/gm,""),
-                bed: bedFound,
-                rent: rentFound,
-                sqft: sqftFound,
-                bath: bathFound,
-                date: toRBDate( cells[ cIndex.date ] )
-            } );
-        }
-    }
-    return newListings;
-}
-
-function chooseProperty() {
-	openTab(starLord);
-	var definePropertiesAtAddress = ` var propertiesAtAddress = []; `;
-	var jsFuncToDo = `
-        var propertyName = recordCells[cIndex.owner].innerText;
-        if ( propertiesAtAddress.indexOf(propertyName) < 0 && /Star Lord|Office/i.test(recordCells[cIndex.origin].innerText) ) {
-            propertiesAtAddress.push(propertyName);
-        }
-	`;
-	var returnProperties = ` return propertiesAtAddress; `;
-	var propertiesAtAddress = chrome.execute( starLord.tab, { javascript: loopThruOldRows(jsFuncToDo, { beforeRows: definePropertiesAtAddress, afterRows: returnProperties }) } );
-	if ( propertiesAtAddress.length > 1 ) { return chrome.chooseFromList(propertiesAtAddress, { withPrompt: 'Which property are you updating right now?' }); }
-	else { return propertiesAtAddress[0]; }
 }
 
 function selectAllButSevenInfo(doNotIncludePictures) {
@@ -456,9 +304,78 @@ if (!starLord && !slSheet) {
         waitForLoading();
     }
 })();
-var propertyBeingUpdated = chooseProperty();
-var oldListings = getOldRecords();
-var latestListing = findLatestListing();
+
+var propertyBeingUpdated = (function chooseProperty() {
+	openTab(starLord);
+	var definePropertiesAtAddress = ` var propertiesAtAddress = []; `;
+	var jsFuncToDo = `
+        var propertyName = recordCells[cIndex.owner].innerText;
+        if ( propertiesAtAddress.indexOf(propertyName) < 0 && /Star Lord|Office/i.test(recordCells[cIndex.origin].innerText) ) {
+            propertiesAtAddress.push(propertyName);
+        }
+	`;
+	var returnProperties = ` return propertiesAtAddress; `;
+	var propertiesAtAddress = chrome.execute( starLord.tab, { javascript: loopThruOldRows(jsFuncToDo, { beforeRows: definePropertiesAtAddress, afterRows: returnProperties }) } );
+	if ( propertiesAtAddress.length > 1 ) { return chrome.chooseFromList(propertiesAtAddress, { withPrompt: 'Which property are you updating right now?' }); }
+	else { return propertiesAtAddress[0]; }
+})();
+
+var oldListings = (function getOldRecords() {
+	var declareOldRecords = ` var oldRecords = []; `;
+	var jsFuncToDo = `
+		oldRecords.push({
+            unit: recordCells[cIndex.unit].innerText,
+            bed: recordCells[cIndex.bed].innerText,
+            rent: recordCells[cIndex.rent].innerText,
+            sqft: recordCells[cIndex.sqft].innerText,
+            bath: recordCells[cIndex.bath].innerText,
+            date: recordCells[cIndex.date].innerText,
+            owner: recordCells[cIndex.owner].innerText,
+            origin: recordCells[cIndex.origin].innerText,
+            status: recordCells[cIndex.status].innerText,
+            starlord: recordCells[cIndex.starlord].innerText,
+            updated: recordCells[cIndex.updated].innerText
+		});
+	`;
+	var returnOldRecords = ` return oldRecords; `;
+	return chrome.execute( starLord.tab,
+		{ javascript: loopThruOldRows( jsFuncToDo,
+			{ beforeRows: declareOldRecords, afterRows: returnOldRecords } )
+		}
+	);
+})();
+
+var latestListing = (function findLatestListing() {
+	openTab(starLord);
+	var declareLatestDate = ` var latestDate = { date: "" }; `;
+	var jsFuncToDo = `
+		var dateFound = fromRBDate( recordCells[cIndex.updated].innerText );
+		if ( dateFound > latestDate.date && recordCells[cIndex.owner].innerText == "` + propertyBeingUpdated + `" ) {
+			latestDate = {
+				"date": dateFound,
+				"i": i
+			};
+			var flagMultiple = false;
+		}
+		else if ( dateFound.getTime() === latestDate.date.getTime() ) {
+			flagMultiple = true;
+		}
+	`;
+	var getLatest = `
+		if ( flagMultiple ) { latestDate.i = "ERROR";	}
+		return latestDate.i;
+	`;
+	var latestDate = chrome.execute( starLord.tab,
+		{ javascript: loopThruOldRows( jsFuncToDo,
+			{ beforecIndex: fromRBDate, beforeRows: declareLatestDate, afterRows: getLatest } )
+		}
+	);
+	if ( latestDate == "ERROR" ) {
+		throwError("I can't find the most recently edited listing, so I don't know what to mark as the source.");
+	}
+	return latestDate;
+})();
+
 (function removeSources() {
 	openTab(starLord);
 	var jsFuncToDo = `
@@ -475,7 +392,86 @@ var latestListing = findLatestListing();
 	}
 })();
 
-var newListings = getListingsFromText();
+var newListings = (function getListingsFromText() {
+	// NEED TO CREATE A WARNING ABOUT DUPLICATE LISTINGS
+	// NEED TO THROWERROR IF MISSING ANY HEADERS
+	openTab(slSheet);
+	delay(0.25);
+	var text;
+	var visit = 0;
+	(function getAllText() {
+	    press("home cmd");
+	    delay(0.25);
+	    press("all copy");
+	    delay(0.25);
+	    text = chrome.theClipboard();
+	    // chrome.displayAlert('text', { message: JSON.stringify( text ) });
+	    if( !/\t/.test(text) ){
+	    	if ( visit < 1 ) {
+	    		press("return");
+	    		visit++;
+	    		getAllText();
+	    	}
+	    	else { throwError("There was an error while trying to grab the new listings. Are they entered into the sheet for Star Lord properly?"); }
+	    }
+	})();
+
+    var cIndex = {};
+    var newListings = [];
+    var rows = text.split(/\r/gm);
+    // chrome.displayAlert('rows', { message: JSON.stringify( rows ) });
+    for ( var i = 0; i < rows.length; i++ ) {
+        var cells = rows[i].split(/\t/g);
+        // chrome.displayAlert('cells', { message: "Row " + i + ": " + JSON.stringify( cells ) });
+        if ( i == 0 ) {
+            for (var j = 0; j < cells.length; j++) {
+                if ( /unit|ap.*t|num/i.test(cells[j]) ) { cIndex.unit = j; }
+                else if ( /be?d/i.test(cells[j]) ) { cIndex.bed = j; }
+                else if ( /rent|cost|starting|price/i.test(cells[j]) ) { cIndex.rent = j; }
+                else if ( /sq.*?fe?e?t/i.test(cells[j]) ) { cIndex.sqft = j; }
+                else if ( /ba/i.test(cells[j]) ) { cIndex.bath = j; }
+                else if ( /date|avail/i.test(cells[j]) ) { cIndex.date = j; }
+            }
+            if( !('unit' in cIndex) || !('bed' in cIndex) || !('rent' in cIndex) || !('sqft' in cIndex) || !('bath' in cIndex) || !('date' in cIndex) ) {
+                throwError("Please put headers into the spreadsheet so I can tell what's the rent, unit number, etc...");
+            }
+        }
+        else {
+            if ( /call/i.test(cells[cIndex.rent]) ){
+                throwError("At least one of the listings that you're updating is a call for price. Please revise, then retry this script.");
+            }
+            var rentFound = Number( cells[ cIndex.rent ].match(/[\d.,]+/)[0].replace(",", "") ).toFixed(0);
+            if (rentFound < 100) {
+            	chrome.displayDialog('There is a rent of ' + rentFound + ', are you sure that\'s right?');
+            }
+            var sqftFound = Number(cells[ cIndex.sqft ].match(/[\d.,]+/)[0].replace(",",""));
+            if (sqftFound < 100) {
+            	chrome.displayDialog('There is a sqft of ' + sqftFound + ', are you sure that\'s right?');
+            }
+            var bedFound = cells[ cIndex.bed ].match(/[\d.]+|s(tudio)?|c(onvertible)?/i)[0].replace(/^0$/,"Studio");
+            if( !isNaN(bedFound) ) {
+            	bedFound = Number(bedFound);
+            	if ( bedFound > 4 ) {
+            		chrome.displayDialog('There is a unit with ' + bedFound + ' beds, are you sure that\'s right?');
+            	}
+            }
+            var bathFound = Number( cells[ cIndex.bath ].match(/[\d.]+/)[0] ).toFixed(1);
+            if ( (bathFound < 1) || (bathFound > 3) || (bathFound % 1 != 0 && (bathFound - 0.5) % 1 != 0) ) {
+            	chrome.displayDialog('There is a unit with ' + bathFound + ' bathrooms, are you sure that\'s right?');
+            }
+
+            newListings.push( {
+                unit: cells[ cIndex.unit ].replace(/^[^\d]*?[\#\s]+/gm,""),
+                bed: bedFound,
+                rent: rentFound,
+                sqft: sqftFound,
+                bath: bathFound,
+                date: toRBDate( cells[ cIndex.date ] )
+            } );
+        }
+    }
+    return newListings;
+})();
 
 applyActionToListing( latestListing, "Set as source" );  // NEED A WAY TO SKIP IF IT'S ALREADY SET AS SOURCE
 if ( !getSource() ) { throwError("I tried to set the latest listing as the source, but it failed. Is it a duplicate?"); }
@@ -651,41 +647,52 @@ while ( divided >= limit ){
 })();
 
 var newUnitNumStr = JSON.stringify(newUnitNums);
-selectAll();
-delay(0.5);
-(function uncheckForRented() {
-	var jsFuncToDo = `
-		var checkbox = recordCells[cIndex.checkbox].querySelector('input');
-		if ( 	( ` + newUnitNumStr + `.includes(recordCells[cIndex.unit].innerText)
-				|| recordCells[cIndex.owner].innerText != "` + propertyBeingUpdated + `" )
-				&& checkbox.checked ) {
-			checkbox.accessKey = "q";
-			return true;
-		}
-	`;
-	chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
-	if ( chrome.execute(starLord.tab, { javascript: loopThruOldRows(jsFuncToDo) }) ) {
-		press( "anchor", "q" );
-		uncheckForRented();
-	}
-})();
-applyBulkAction("rented");
 
-selectAll();
-(function uncheckForActive() {
-	var jsFuncToDo = `
-		var checkbox = recordCells[cIndex.checkbox].querySelector('input');
-		if ( 	( ! ` + newUnitNumStr + `.includes(recordCells[cIndex.unit].innerText)
-				|| recordCells[cIndex.owner].innerText != "` + propertyBeingUpdated + `" )
-				&& checkbox.checked ) {
-			checkbox.accessKey = "q";
-			return true;
+console.log("TESTING!!!");
+console.log("There are", oldUnitNums.length, " listings in oldUnitNums:", oldUnitNums);
+console.log("There are", newUnitNums.length, " listings in newUnitNums:", newUnitNums);
+console.log("---------");
+console.log("These need to be marked as rented:", oldUnitNums.filter(function(a){ return newUnitNums.indexOf(a) < 0; }));
+
+if ( oldUnitNums.filter(function(a){ return newUnitNums.indexOf(a) < 0; }).length ) {  // Script won't run if there aren't any old listings that need to be marked rented
+	selectAll();
+	delay(0.5);
+	(function uncheckForRented() {
+		var jsFuncToDo = `
+			var checkbox = recordCells[cIndex.checkbox].querySelector('input');
+			if ( 	( ` + newUnitNumStr + `.includes(recordCells[cIndex.unit].innerText)
+					|| recordCells[cIndex.owner].innerText != "` + propertyBeingUpdated + `" )
+					&& checkbox.checked ) {
+				checkbox.accessKey = "q";
+				return true;
+			}
+		`;
+		chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
+		if ( chrome.execute(starLord.tab, { javascript: loopThruOldRows(jsFuncToDo) }) ) {
+			press( "anchor", "q" );
+			uncheckForRented();
 		}
-	`;
-	chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
-	if ( chrome.execute(starLord.tab, { javascript: loopThruOldRows(jsFuncToDo) }) ) {
-		press( "anchor", "q" );
-		uncheckForActive();
-	}
-})();
-applyBulkAction("active");
+	})();
+	applyBulkAction("rented");
+}
+
+if ( newUnitNums.length ) {  // Script won't run if there aren't any new listings that need to be marked active
+	selectAll();
+	(function uncheckForActive() {
+		var jsFuncToDo = `
+			var checkbox = recordCells[cIndex.checkbox].querySelector('input');
+			if ( 	( ! ` + newUnitNumStr + `.includes(recordCells[cIndex.unit].innerText)
+					|| recordCells[cIndex.owner].innerText != "` + propertyBeingUpdated + `" )
+					&& checkbox.checked ) {
+				checkbox.accessKey = "q";
+				return true;
+			}
+		`;
+		chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
+		if ( chrome.execute(starLord.tab, { javascript: loopThruOldRows(jsFuncToDo) }) ) {
+			press( "anchor", "q" );
+			uncheckForActive();
+		}
+	})();
+	applyBulkAction("active");
+}
