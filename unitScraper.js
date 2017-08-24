@@ -73,21 +73,19 @@ function populateTable(info) {
 	var warning = "";
 
 	var minLength = 4;
+	var addLeadingZeros = true;
 	for (i = 0; i < info.length; i++) {
-		info[i].unit = info[i].unit.replace(/\#/, "");
-		if( ! /^\d+$/gi.test(info[i].unit) ){
-			minLength = 0;
-			break;
-		}
-		if( info[i].unit.length > minLength ){ minLength = info[i].unit.length; }
+		info[i].unit = info[i].unit.trim().replace(/[#\s]/g, "");
+		if( ! /^[\d-]+$/gi.test(info[i].unit) ){ addLeadingZeros = false; }
+		if( addLeadingZeros && info[i].unit.length > minLength ){ minLength = info[i].unit.length; }
 	}
 
 	console.log(info.length, "units found, adding table to bottom. -" + scraper + " Scraper");
 	for (i = 0; i < info.length; i++) {
 
-		var unitId = "kmScraper" + info[i].unit.trim().replace(/\s/gi,"");
+		var unitId = "kmScraper" + info[i].unit.replace(/\//g,"");
 
-		if( !document.querySelector("#" + unitId) ) {
+		if( !document.querySelector("#" + unitId.replace(/\//g,"")) ) {
 			var tr = document.createElement('tr');
 
 			while (info[i].unit.length < minLength) { info[i].unit = "0" + info[i].unit; }
@@ -277,6 +275,35 @@ else if ( document.querySelector('div.iui-cards-floorplan-details') ) {
 	}
 	populateTable(info);
 }
+
+/*
+else if ( document.querySelector(".iui-floorplan") ) {
+	// http://www.montoroapartments.com/p/apartments/floor_plans_7891/irving-tx-75061/montoro-apartments-7891
+	scraper = "montoro";
+	var floorplans = document.querySelectorAll(".iui-floorplan");
+	var numOffloorplans = floorplans.length;
+	for (var i = 0; i < numOffloorplans; i++) {
+		var thisfloorplan = floorplans[i].querySelectorAll(".iui-number");
+		var beds = thisfloorplan[0];
+		var baths = thisfloorplan[1];
+		var sqft = thisfloorplan[2];
+		var unitsFound = floorplans[i].querySelectorAll(".iui-child-unit");
+		var numOfunitsFound = unitsFound.length;
+		for (var j = 0; j < numOfunitsFound; j++) {
+			var thisunitFound = unitsFound[j].querySelectorAll(".iui-number");
+			info.push({
+				unit: spans[0].innerHTML.replace(/<.*?>/gi, ""),
+				beds: beds,
+				rent: spans[1].innerHTML.replace(/<.*?>/gi, ""),
+				sqft: sqft,
+				baths: baths,
+				date: spans[2].innerHTML.replace(/<.*?>/gi, "")
+			});
+		}
+	}
+
+}
+*/
 
 else if ( document.querySelector('p.floorplaninfotext') ) {
 	// https://www.gables.com/communities/texas/plano/junction-15/
