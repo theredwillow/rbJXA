@@ -648,12 +648,6 @@ while ( divided >= limit ){
 
 var newUnitNumStr = JSON.stringify(newUnitNums);
 
-console.log("TESTING!!!");
-console.log("There are", oldUnitNums.length, " listings in oldUnitNums:", oldUnitNums);
-console.log("There are", newUnitNums.length, " listings in newUnitNums:", newUnitNums);
-console.log("---------");
-console.log("These need to be marked as rented:", oldUnitNums.filter(function(a){ return newUnitNums.indexOf(a) < 0; }));
-
 if ( oldUnitNums.filter(function(a){ return newUnitNums.indexOf(a) < 0; }).length ) {  // Script won't run if there aren't any old listings that need to be marked rented
 	selectAll();
 	delay(0.5);
