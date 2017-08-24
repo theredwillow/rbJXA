@@ -526,63 +526,79 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 	// http://www.platinumcastlehills.com/Floor-plans.aspx
 	// http://www.residenceatarlington.com/Floor-plans.aspx
 	scraper = "leasestar";
-	var floorplans = document.querySelectorAll('.floorplan-block');
-	for (i = 0; i < floorplans.length; i++) {
-		var floorplaninfo = floorplans[i].querySelectorAll('.specification li strong,.specification>span>span');
-		var bed = floorplaninfo[0].innerHTML;
-		var bath = floorplaninfo[1].innerHTML;
-		if  ( document.querySelectorAll('#unitInfoPanel').length == 0 ){
-			var unitrows = floorplans[i].querySelectorAll('table tr');
-		}
-		else {
-			var floorPlanName = floorplans[i].querySelector('h2').innerText;
-			var floorPlanUnits = document.querySelectorAll('.fp-name');
-			var numOffloorPlanUnits = floorPlanUnits.length;
-			for (var k = 0; k < numOffloorPlanUnits; k++) {
-				if ( floorPlanUnits[k].innerText == floorPlanName ) {
-					var unitrows = floorPlanUnits[k].parentNode.parentNode.querySelectorAll('div.unit-container');  // .par-units 
-					break;
+
+	if (document.querySelector(".unit-show-hide").innerText == "Loading..."){
+		alert("This scraper only works if you wait for the 'Loading...' message to disappear. Please wait for it to change, then run the scraper again.");
+		location.reload();
+		// window.location.href
+	}
+	else {
+
+		var floorplans = document.querySelectorAll('.floorplan-block');
+		for (i = 0; i < floorplans.length; i++) {
+			var floorplaninfo = floorplans[i].querySelectorAll('.specification li strong,.specification>span>span');
+			var bed = floorplaninfo[0].innerHTML;
+			var bath = floorplaninfo[1].innerHTML;
+			if  ( document.querySelectorAll('#unitInfoPanel').length == 0 ){
+				var unitrows = floorplans[i].querySelectorAll('table tr');
+			}
+			else {
+				var floorPlanName = floorplans[i].querySelector('h2').innerText;
+				var floorPlanUnits = document.querySelectorAll('.fp-name');
+				var numOffloorPlanUnits = floorPlanUnits.length;
+				for (var k = 0; k < numOffloorPlanUnits; k++) {
+					if ( floorPlanUnits[k].innerText == floorPlanName ) {
+						var unitrows = floorPlanUnits[k].parentNode.parentNode.querySelectorAll('div.unit-container');  // .par-units 
+						break;
+					}
 				}
 			}
-		}
-		for (j = 0; j < unitrows.length; j++) {
-			var headers = unitrows[j].querySelectorAll("th");
-			if (headers.length) {
-				var cIndex = getcIndex(headers);
-				var cIndexGiven = true;
-				continue;
-			}
-			var unitinfo = unitrows[j].querySelectorAll('td,.unit-container>div>div');
+			for (j = 0; j < unitrows.length; j++) {
+				var headers = unitrows[j].querySelectorAll("th");
+				if (headers.length) {
+					var cIndex = getcIndex(headers);
+					var cIndexGiven = true;
+					continue;
+				}
+				var unitinfo = unitrows[j].querySelectorAll('td,.unit-container>div>div');
 
-			if (!cIndexGiven) {
-				var cIndex = {
-					"unit": 0,
-					"sqft": 1,
-					"date": 2
-				};
-				if ( /\$/.test(unitinfo[3].innerText) ) { cIndex.rent = 3; }
-				else { cIndex.rent = 4; }
-			}
+				if (!cIndexGiven) {
+					var cIndex = {
+						"unit": 0,
+						"sqft": 1,
+						"date": 2
+					};
+					if ( /\$/.test(unitinfo[3].innerText) ) { cIndex.rent = 3; }
+					else { cIndex.rent = 4; }
+				}
 
-			var unitRent = unitinfo[cIndex.rent];
-			if (unitRent) { unitRent = unitRent.innerText.replace(/[$,]/gi,""); }
-			if ( !unitRent || isNaN(unitRent) ) { unitRent = floorplaninfo[3].innerHTML; }
-			
-			info.push({
-				unit: unitinfo[cIndex.unit].innerText.replace(/Unit\s\#?/i, ""),
-				beds: bed,
-				rent: unitRent,
-				sqft: unitinfo[cIndex.sqft].innerText.replace(sqftRegex, ""),
-				baths: bath,
-				date: unitinfo[cIndex.date].innerText.replace(/Available:?\s?/i, "")
-			});
+				var unitRent = unitinfo[cIndex.rent];
+				if (unitRent) { unitRent = unitRent.innerText.replace(/[$,]/gi,""); }
+				if ( !unitRent || isNaN(unitRent) ) {
+					if (floorplaninfo[3]) { unitRent = floorplaninfo[3].innerHTML; }
+					else { var noRent; }
+				}
+				
+				info.push({
+					unit: unitinfo[cIndex.unit].innerText.replace(/Unit\s\#?/i, ""),
+					beds: bed,
+					rent: unitRent,
+					sqft: unitinfo[cIndex.sqft].innerText.replace(sqftRegex, ""),
+					baths: bath,
+					date: unitinfo[cIndex.date].innerText.replace(/Available:?\s?/i, "")
+				});
+			}
 		}
+		if (noRent) { alert("I don't think this website has any rent prices."); }
+		else {
+			populateTable(info);
+			selectElementContents( table );
+			// alert("WARNING: This scraper is potentially broken.");
+			alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
+			toggleVis(document.querySelector("#form"));
+		}
+
 	}
-	populateTable(info);
-	selectElementContents( table );
-	// alert("WARNING: This scraper is potentially broken.");
-	alert( "Table's been added and selected, press ctrl+c and paste it into your google sheet." );
-	toggleVis(document.querySelector("#form"));
 }
 
 else if ( document.querySelector('.available-apartment-card') ) {
