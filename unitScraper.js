@@ -170,12 +170,13 @@ function qsAllProp(elementsGiven, propGiven){
 }
 
 var bedRegex = new RegExp(/\s?be?d/gi);
-var bathRegex = new RegExp(/\s?bath/gi);
-var sqftRegex = new RegExp(/\s?sq.*?f.*?t/gi);
-var aptRegex = new RegExp(/apartment|unit|number|apt/gi);
+var bathRegex = new RegExp(/\s?bat?h?/gi);
+var sqftRegex = new RegExp(/\s?sq?.*?f.*?t?/gi);
+var aptRegex = new RegExp(/ap(artmen)?t|unit|num(ber)?/gi);
 var rentRegex = new RegExp(/rent|price|month|starting/gi);
 var dateRegex = new RegExp(/date|avail|move/gi);
 
+var numRegex = new RegExp(/[\d.,]+/g);
 var bedNumRegex = new RegExp(/[\d.]+(?=(?:\s|(?:&nbsp;))?be?d)|studio|convertible/gi);
 var bathNumRegex = new RegExp(/[\d.]+(?=(?:\s|(?:&nbsp;))?bath)/gi);
 var sqftNumRegex = new RegExp(/[\d,.]+(?=(?:\s|(?:&nbsp;))?sq?.*?f.*?t?)/gi);
@@ -942,6 +943,49 @@ else if ( document.querySelector("#unit-filter-container") ) {
 		selectElementContents( table );
 		alert("Table's been added and selected, press ctrl+c and paste it into your google sheet.");
 	}
+}
+
+else if ( document.querySelector(".wrapper-property-floorplans.sitemap-toggle-target ") ) {
+	scraper = "IMT Residential";
+	var fpTables = document.querySelectorAll("#floorplans-container .floorplans-row");
+	var numOffpTables = fpTables.length;
+	for (var i = 0; i < numOffpTables; i++) {
+		var fpInfo = fpTables[i].querySelectorAll(".subtitle");
+		var numOffpInfo = fpInfo.length;
+		for (var j = 0; j < numOffpInfo; j++) {
+			var thisfpInfo = fpInfo[j].innerText;
+			if ( bedRegex.test(thisfpInfo) ) { var bed = thisfpInfo.match(bedNumRegex)[0]; }
+			else if ( bathRegex.test(thisfpInfo) ) { var bath = thisfpInfo.match(bathNumRegex)[0]; }
+			else if ( sqftRegex.test(thisfpInfo) ) { var sqft = thisfpInfo.match(sqftNumRegex)[0]; }
+			else if ( rentRegex.test(thisfpInfo) ) {
+				var rent = thisfpInfo.match(numRegex);
+				if ( rent ){ rent = rent[0]; }
+				else { rent = "N/A"; }
+			}
+		}
+		if ( rent == "N/A" ) { break; }
+		var cIndex = getcIndex( fpTables[i].querySelectorAll(".header-table") );
+		var unitsFound = fpTables[i].querySelectorAll(".table-row");
+		var numOfunitsFound = unitsFound.length;
+		for (var k = 1; k < numOfunitsFound; k++) {  // Start at 1 to avoid headers
+			var theseCells = unitsFound[k].querySelectorAll(".data-table");
+			if ('bed' in cIndex) { bed = theseCells[ cIndex.bed ].innerText.match(numRegex)[0]; }
+			if ('rent' in cIndex) { rent = theseCells[ cIndex.rent ].innerText.match(numRegex)[0]; }
+			if ('sqft' in cIndex) { sqft = theseCells[ cIndex.sqft ].innerText.match(numRegex)[0]; }
+			if ('bath' in cIndex) { bath = theseCells[ cIndex.bath ].innerText.match(numRegex)[0]; }
+			info.push({
+				unit: theseCells[ cIndex.unit ].innerText,
+				beds: bed,
+				rent: rent,
+				sqft: sqft,
+				baths: bath,
+				date: theseCells[ cIndex.date ].innerText
+			});
+		}
+	}
+	populateTable(info);
+	selectElementContents( table );
+	alert("Table's been added and selected, press ctrl+c and paste it into your google sheet.");
 }
 
 else if ( document.querySelector("#ContentPlaceHolder1_gvFloorPlans") ) {
