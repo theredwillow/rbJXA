@@ -25,3 +25,7 @@ Default Column Order: Unit	Bed	Rent	SQFT	Bath	Date
 * Until I fix it, have these columns selected in display before you first run the script
 "Status    Address    Apt #    Owner    #Bdrm    Rent    Sq. Footage    #Bthrms    Phone    Owner Pays    Date Available    Last Updated    Modified By    Origin Source    Star Lord    Listing Summary"
 * Until I fix it, keep only one chrome window open at a time
+
+###### Reporting errors
+* If something unexpected happens, please report it to Jared in the Dallas office.
+* If you think you can reproduce the problem: open Quicktime (command+space, then type quicktime), right click it in the dock, click the option to record the screen, then run the script again. After, you'll have a video the tech team can use to diagnose and fix the problem.
