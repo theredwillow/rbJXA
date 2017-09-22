@@ -301,7 +301,7 @@ var cIndex = (function getcIndex() {
 			"updated" : /updated$/i,
 			"status" : /^status$/i,
 			"origin" : /origin/i,
-			"starlord" : /star\s*lord/i,
+			"starlord" : /star\\s*lord/i,
 			"owner" : /^owner$/i
 		};
 		var neededRows = Object.keys(regexTests);
