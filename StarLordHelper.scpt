@@ -115,46 +115,8 @@ function loopThruOldRows(funcStringToExec, otherFuncs) {
 	otherFuncs.afterRows = otherFuncs.afterRows || "";
 	return `(function () {
 		var recordRows = document.body.querySelectorAll(".normalTxt>tbody>tr");
-		` + otherFuncs.beforecIndex + `
-		var headerCells = recordRows[0].querySelectorAll('td');
-		window.cIndex = {
-			"checkbox" : 0,
-			"action" : headerCells.length - 1
-		};
-		var regexTests = {
-			"unit" : /ap(artmen)?t|unit/i,
-			"bed" : /bed/i,
-			"rent" : /rent|price/i,
-			"sqft" : /sq.*f.*t(age)?/i,
-			"bath" : /bath/i,
-			"date" : /^date\s[^e]/i,
-			"updated" : /updated[^*]/i,
-			"status" : /^status$/i,
-			"origin" : /origin/i,
-			"starlord" : /star\s?lord/i,
-			"owner" : /^owner$/i
-		};
-		var neededRows = Object.keys(regexTests);
-		for (var i = 1; i < cIndex.action; i++) {
-			var headerAssigned = false;
-			for (var prop in regexTests) {
-			    if ( regexTests[prop].test(headerCells[i].innerText) ) {
-					cIndex[prop] = i;
-					delete regexTests[prop];
-					headerAssigned = true;
-					break;
-			    }
-			}
-			// If no matching regex, just add the header name to cIndex
-			if (!headerAssigned) {
-				cIndex[ headerCells[i].innerText ] = i;
-			}
-		}
-		neededRows = neededRows.filter(function(el){ return !(el in cIndex); });
-		if (neededRows.length) {
-			throwError("Please make sure that you have these fields included in your display as well: ", neededRows.join(",") );
-		}
-		` + otherFuncs.beforeRows + `
+		` + otherFuncs.beforecIndex +
+		 + otherFuncs.beforeRows + `
 		var numOfRows = recordRows.length;
 		for (var i = 1; i < numOfRows; i++) {
 			var recordCells = recordRows[i].querySelectorAll('td');
@@ -322,6 +284,55 @@ if (!starLord && !slSheet) {
     }
 })();
 
+var cIndex = (function getcIndex() {
+	var cIndexFunc = `(function () {
+		var headerCells = recordRows[0].querySelectorAll('td');
+		window.cIndex = {
+			"checkbox" : 0,
+			"action" : headerCells.length - 1
+		};
+		var regexTests = {
+			"unit" : /ap(artmen)?t|unit/i,
+			"bed" : /bed/i,
+			"rent" : /rent|price/i,
+			"sqft" : /sq.*f.*t(age)?/i,
+			"bath" : /bath/i,
+			"date" : /^date\s[^e]/i,
+			"updated" : /updated[^*]/i,
+			"status" : /^status$/i,
+			"origin" : /origin/i,
+			"starlord" : /star\s?lord/i,
+			"owner" : /^owner$/i
+		};
+		var neededRows = Object.keys(regexTests);
+		for (var i = 1; i < window.cIndex.action; i++) {
+			var headerAssigned = false;
+			for (var prop in regexTests) {
+			    if ( regexTests[prop].test(headerCells[i].innerText) ) {
+					window.cIndex[prop] = i;
+					delete regexTests[prop];
+					headerAssigned = true;
+					break;
+			    }
+			}
+			// If no matching regex, just add the header name to cIndex
+			if (!headerAssigned) {
+				window.cIndex[ headerCells[i].innerText ] = i;
+			}
+		}
+		neededRows = neededRows.filter(function(el){ return !(el in window.cIndex); });
+		if (neededRows.length) {
+			return "ERROR: Please make sure that you have these fields included in your display as well: " + neededRows.join(",");
+		}
+		else {
+			return JSON.stringify(window.cIndex);
+		}
+	})(); `;
+	var resultOfcIndexFunc = chrome.execute(starLord.tab, { javascript: cIndexFunc });
+	if ( resultOfcIndexFunc.startsWith("ERROR:") ) { throwError(resultOfcIndexFunc); }
+	else { return JSON.parse(resultOfcIndexFunc); }
+})();
+
 var propertyBeingUpdated = (function chooseProperty() {
 	openTab(starLord);
 	var definePropertiesAtAddress = ` var propertiesAtAddress = []; `;
@@ -433,7 +444,6 @@ var newListings = (function getListingsFromText() {
 	    }
 	})();
 
-    var cIndex = {};
     var newListings = [];
     var rows = text.split(/\r/gm);
     // chrome.displayAlert('rows', { message: JSON.stringify( rows ) });
