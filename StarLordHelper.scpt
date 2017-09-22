@@ -116,7 +116,7 @@ function loopThruOldRows(funcStringToExec, otherFuncs) {
 	return `(function () {
 		var recordRows = document.body.querySelectorAll(".normalTxt>tbody>tr");
 		` + otherFuncs.beforecIndex +
-		 + otherFuncs.beforeRows + `
+		 otherFuncs.beforeRows + `
 		var numOfRows = recordRows.length;
 		for (var i = 1; i < numOfRows; i++) {
 			var recordCells = recordRows[i].querySelectorAll('td');
