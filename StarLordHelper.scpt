@@ -116,26 +116,43 @@ function loopThruOldRows(funcStringToExec, otherFuncs) {
 	return `(function () {
 		var recordRows = document.body.querySelectorAll(".normalTxt>tbody>tr");
 		` + otherFuncs.beforecIndex + `
-		if ( typeof cIndex === 'undefined' ) {
-			var headerCells = recordRows[0].querySelectorAll('td');
-			window.cIndex = {};
-			cIndex.checkbox = 0;
-			cIndex.action = headerCells.length - 1;  // THIS DOESN'T WORK WHEN #PICS IS ADDED
-			for (var i = 1; i < cIndex.action; i++) {
-				switch( headerCells[i].innerText ) {
-					case "Apt #": cIndex.unit = i; break;
-					case "#Bdrm": cIndex.bed = i; break;
-					case "Rent": cIndex.rent = i; break;
-					case "Sq. Footage": cIndex.sqft = i; break;
-					case "#Bthrms": cIndex.bath = i; break;
-					case "Date Available": cIndex.date = i; break;
-					case "Last Updated": cIndex.updated = i; break;
-					case "Status": cIndex.status = i; break;
-					case "Origin Source": cIndex.origin = i; break;
-					case "Star Lord": cIndex.starlord = i; break;
-					case "Owner": cIndex.owner = i; break;
-				}
+		var headerCells = recordRows[0].querySelectorAll('td');
+		window.cIndex = {
+			"checkbox" : 0,
+			"action" : headerCells.length - 1
+		};
+		var regexTests = {
+			"unit" : /ap(artmen)?t|unit/i,
+			"bed" : /bed/i,
+			"rent" : /rent|price/i,
+			"sqft" : /sq.*f.*t(age)?/i,
+			"bath" : /bath/i,
+			"date" : /^date\s[^e]/i,
+			"updated" : /updated[^*]/i,
+			"status" : /^status$/i,
+			"origin" : /origin/i,
+			"starlord" : /star\s?lord/i,
+			"owner" : /^owner$/i
+		};
+		var neededRows = Object.keys(regexTests);
+		for (var i = 1; i < cIndex.action; i++) {
+			var headerAssigned = false;
+			for (var prop in regexTests) {
+			    if ( regexTests[prop].test(headerCells[i].innerText) ) {
+					cIndex[prop] = i;
+					delete regexTests[prop];
+					headerAssigned = true;
+					break;
+			    }
 			}
+			// If no matching regex, just add the header name to cIndex
+			if (!headerAssigned) {
+				cIndex[ headerCells[i].innerText ] = i;
+			}
+		}
+		neededRows = neededRows.filter(function(el){ return !(el in cIndex); });
+		if (neededRows.length) {
+			throwError("Please make sure that you have these fields included in your display as well: ", neededRows.join(",") );
 		}
 		` + otherFuncs.beforeRows + `
 		var numOfRows = recordRows.length;
