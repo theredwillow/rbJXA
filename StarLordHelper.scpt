@@ -295,13 +295,13 @@ var cIndex = (function getcIndex() {
 			"unit" : /ap(artmen)?t|unit/i,
 			"bed" : /bed/i,
 			"rent" : /rent|price/i,
-			"sqft" : /sq.*f.*t(age)?/i,
+			"sqft" : /sq.*f.*t/i,
 			"bath" : /bath/i,
-			"date" : /^date\s[^e]/i,
-			"updated" : /updated[^*]/i,
+			"date" : /available/i,
+			"updated" : /updated$/i,
 			"status" : /^status$/i,
 			"origin" : /origin/i,
-			"starlord" : /star\s?lord/i,
+			"starlord" : /star\s*lord/i,
 			"owner" : /^owner$/i
 		};
 		var neededRows = Object.keys(regexTests);
