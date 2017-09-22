@@ -286,7 +286,7 @@ if (!starLord && !slSheet) {
 
 var cIndex = (function getcIndex() {
 	var cIndexFunc = `(function () {
-		var headerCells = recordRows[0].querySelectorAll('td');
+		var headerCells = document.body.querySelector(".normalTxt>tbody>tr").querySelectorAll('td');
 		window.cIndex = {
 			"checkbox" : 0,
 			"action" : headerCells.length - 1
