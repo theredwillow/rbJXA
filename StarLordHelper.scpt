@@ -114,12 +114,12 @@ function loopThruOldRows(funcStringToExec, otherFuncs) {
 	otherFuncs.beforeRows = otherFuncs.beforeRows || "";
 	otherFuncs.afterRows = otherFuncs.afterRows || "";
 	return `(function () {
-		var recordRows = document.body.querySelectorAll(".normalTxt>tbody>tr");
+		var recordRows = document.body.querySelectorAll(".normalTxt > tbody > tr");
 		` + otherFuncs.beforecIndex +
 		 otherFuncs.beforeRows + `
 		var numOfRows = recordRows.length;
 		for (var i = 1; i < numOfRows; i++) {
-			var recordCells = recordRows[i].querySelectorAll('td');
+			var recordCells = recordRows[i].querySelectorAll('.normalTxt > tbody > tr > td');
 			` + funcStringToExec + `
 		}
 		` + otherFuncs.afterRows + `
