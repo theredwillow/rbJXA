@@ -288,48 +288,44 @@ var cIndex = (function getcIndex() {
 	var cIndexFunc = `(function () {
 		var headerCells = document.body.querySelector(".normalTxt>tbody>tr").querySelectorAll('td');
 		window.cIndex = {
-			"checkbox" : 0,
-			"action" : headerCells.length - 1
+			"checkbox" : 0
 		};
-		var regexTests = {
-			"unit" : /ap(artmen)?t|unit/i,
-			"bed" : /bed/i,
-			"rent" : /rent|price/i,
-			"sqft" : /sq.*f.*t/i,
-			"bath" : /bath/i,
-			"date" : /available/i,
-			"updated" : /updated$/i,
-			"status" : /^status$/i,
-			"origin" : /origin/i,
-			"starlord" : /star\\s*lord/i,
-			"owner" : /^owner$/i
+		var listOfIDs = {
+			"unit" : "aptnumber",
+			"bed" : "bedrooms",
+			"rent" : "rent",
+			"sqft" : "squarefootage",
+			"bath" : "bathrooms",
+			"date" : "dateavailable",
+			"updated" : "updated_at",
+			"status" : "status",
+			"origin" : "source",
+			"starlord" : "star_lord",
+			"owner" : "managementco",
+			"action" : "action_col"
 		};
-		var neededRows = Object.keys(regexTests);
-		for (var i = 1; i < window.cIndex.action; i++) {
+		for (var i = 1; i < headerCells.length; i++) {
 			var headerAssigned = false;
-			for (var prop in regexTests) {
-			    if ( regexTests[prop].test(headerCells[i].innerText) ) {
+			for (var prop in listOfIDs) {
+			    if ( headerCells[i].id == listOfIDs[prop] ) {
 					window.cIndex[prop] = i;
-					delete regexTests[prop];
+					delete listOfIDs[prop];
 					headerAssigned = true;
 					break;
 			    }
 			}
-			// If no matching regex, just add the header name to cIndex
+			// If no matching id, just add the id to cIndex
 			if (!headerAssigned) {
-				window.cIndex[ headerCells[i].innerText ] = i;
+				window.cIndex[ headerCells[i].id ] = i;
 			}
 		}
-		neededRows = neededRows.filter(function(el){ return !(el in window.cIndex); });
-		if (neededRows.length) {
-			return "ERROR: Please make sure that you have these fields included in your display as well: " + neededRows.join(",");
+		if (Object.keys(listOfIDs).length) {
+			return "Please make sure that you have these fields included in your display as well: " + neededRows.join(",");
 		}
-		else {
-			return JSON.stringify(window.cIndex);
-		}
+		return JSON.stringify(window.cIndex);
 	})(); `;
 	var resultOfcIndexFunc = chrome.execute(starLord.tab, { javascript: cIndexFunc });
-	if ( resultOfcIndexFunc.startsWith("ERROR:") ) { throwError(resultOfcIndexFunc); }
+	if ( resultOfcIndexFunc.startsWith("Please") ) { throwError(resultOfcIndexFunc); }
 	else { return JSON.parse(resultOfcIndexFunc); }
 })();
 
