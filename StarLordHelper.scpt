@@ -319,7 +319,8 @@ var cIndex = (function getcIndex() {
 				window.cIndex[ headerCells[i].id ] = i;
 			}
 		}
-		if (Object.keys(listOfIDs).length) {
+		var neededRows = Object.keys(listOfIDs);
+		if (neededRows.length) {
 			return "Please make sure that you have these fields included in your display as well: " + neededRows.join(",");
 		}
 		return JSON.stringify(window.cIndex);
