@@ -559,10 +559,14 @@ while ( divided >= limit ){
 		}
 	})();
 
-	// VERONICA'S SCRIPT BREAKS DOWN HERE, IT SKIPS PAST TO SAVING...
-
 	chrome.execute(starLord.tab, { javascript: `(function () { document.body.querySelector("div.right > button").click(); })();` });
 	var newListingsStr = JSON.stringify( newListings );
+
+	// Wait for editable fields to appear before editing listings
+	while ( ! chrome.execute(starLord.tab, { javascript: `Boolean( document.body.querySelector(".evenRow input[type='text']") );` }) ) {
+		delay(0.25);
+	}
+
 	(function editingTheListings() {
 		var passInfo = `
 			var notAlreadyListed = ` + JSON.stringify( notAlreadyListed ) + `;
