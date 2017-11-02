@@ -34,7 +34,7 @@ var deleteAccesskeys = `( function () {
 function placeAccessKey(elemString, letterString) {
 	letterString = letterString || "q";
 	if ( /recordRows/.test(elemString) ) {
-	    var includeString = `var recordRows = document.body.querySelectorAll(".normalTxt>tbody>tr");`;
+	    var includeString = `var recordRows = document.body.querySelectorAll(".normalTxt > tbody > tr");`;
 	}
 	else {
 		var includeString = "";
@@ -286,44 +286,47 @@ if (!starLord && !slSheet) {
 
 var cIndex = (function getcIndex() {
 	var cIndexFunc = `(function () {
-		var headerCells = document.body.querySelector(".normalTxt>tbody>tr").querySelectorAll('td');
+		var headerCells = document.body.querySelector(".normalTxt > tbody > tr").querySelectorAll('td');
 		window.cIndex = {
-			"checkbox" : 0
+			"checkbox" : 0,
+			"action" : headerCells.length - 1
 		};
-		var listOfIDs = {
-			"unit" : "aptnumber",
-			"bed" : "bedrooms",
-			"rent" : "rent",
-			"sqft" : "squarefootage",
-			"bath" : "bathrooms",
-			"date" : "dateavailable",
-			"updated" : "updated_at",
-			"status" : "status",
-			"origin" : "source",
-			"starlord" : "star_lord",
-			"owner" : "managementco",
-			"action" : "action_col"
+		var regexTests = {
+			"unit" : /ap(artmen)?t|unit/i,
+			"bed" : /bed/i,
+			"rent" : /rent|price/i,
+			"sqft" : /sq.*f.*t/i,
+			"bath" : /bath/i,
+			"date" : /available/i,
+			"updated" : /updated$/i,
+			"status" : /^status$/i,
+			"origin" : /origin/i,
+			"starlord" : /star\\s*lord/i,
+			"owner" : /^owner$/i
 		};
+		var neededRows = Object.keys(regexTests);
 		for (var i = 1; i < headerCells.length; i++) {
 			var headerAssigned = false;
-			for (var prop in listOfIDs) {
-			    if ( headerCells[i].id == listOfIDs[prop] ) {
+			for (var prop in regexTests) {
+			    if ( regexTests[prop].test(headerCells[i].innerText) ) {
 					window.cIndex[prop] = i;
-					delete listOfIDs[prop];
+					delete regexTests[prop];
 					headerAssigned = true;
 					break;
 			    }
 			}
-			// If no matching id, just add the id to cIndex
+			// If no matching regex, just add the header name to cIndex
 			if (!headerAssigned) {
-				window.cIndex[ headerCells[i].id ] = i;
+				window.cIndex[ headerCells[i].innerText ] = i;
 			}
 		}
-		var neededRows = Object.keys(listOfIDs);
+		neededRows = neededRows.filter(function(el){ return !(el in window.cIndex); });
 		if (neededRows.length) {
 			return "Please make sure that you have these fields included in your display as well: " + neededRows.join(",");
 		}
-		return JSON.stringify(window.cIndex);
+		else {
+			return JSON.stringify(window.cIndex);
+		}
 	})(); `;
 	var resultOfcIndexFunc = chrome.execute(starLord.tab, { javascript: cIndexFunc });
 	if ( resultOfcIndexFunc.startsWith("Please") ) { throwError(resultOfcIndexFunc); }
