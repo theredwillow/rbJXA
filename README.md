@@ -1,11 +1,13 @@
 # RB MC Script Helper
 
-This will make your job easier. Come here to get the latest version of the script.
+This will make your job easier. Come here to get the latest version of the .scpt file.
 
-#### The .js file is the bookmarklet. You will add it to your bookmarks after you transform it...
-* Step 1) Copy it [raw (click here)](https://raw.githubusercontent.com/theredwillow/rbJXA/master/unitScraper.js) from github.
-* Step 2) Paste it in here http://trinithis.awardspace.com/commentStripper/stripper.html, press the button and copy the text.
-* Step 3) Paste that in here http://mrcoles.com/bookmarklet/, then copy and paste that into your bookmark.
+#### The .js file is the bookmarklet.
+* Create a bookmark in your browser with the code in the box below as the URL. (Warning: Chrome protects its users from viruses, but this is safe, make sure the word "javascript:" isn't deleted from the front when you paste it.)
+
+```
+javascript:(function(){document.body.appendChild(document.createElement('script')).src="https://rawgit.com/theredwillow/rbJXA/master/unitScraper.js";})();
+```
 
 Default Column Order: Unit	Bed	Rent	SQFT	Bath	Date 
 
