@@ -1,1 +1,1 @@
-console.log("Unit Scraper 2 loaded.");
+alert("Unit Scraper 2 loaded.");
