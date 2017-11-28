@@ -1,6 +1,8 @@
 // unitScraper.js
 // This is a script that you can inject into chrome to scrape unit listings from apartment websites.
 
+console.log("Unit Scraper 2 loaded.");
+
 // This keeps track of whether there's already a toggleVis() eventListener
 var spaceListener = false;
 // These are frequently used functions for scraping
