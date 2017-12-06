@@ -710,7 +710,7 @@ scrapers["imtresidential"] = {
             var fpInfo = fpTables[i].querySelectorAll(".subtitle");
             for (var j = 0; j < fpInfo.length; j++) {
                 var thisfpInfo = fpInfo[j].innerText;
-                if (  utilRegex.bed.test(thisfpInfo) ) { var bed = thisfpInfo.match( utilRegex.bedNum )[0]; }
+                if (  utilRegex.bed.test(thisfpInfo) || utilRegex.bedNum.test(thisfpInfo) ) { var bed = thisfpInfo.match( utilRegex.bedNum )[0]; }
                 else if ( utilRegex.bath.test(thisfpInfo) ) { var bath = thisfpInfo.match( utilRegex.bathNum )[0]; }
                 else if ( utilRegex.sqft.test(thisfpInfo) ) { var sqft = thisfpInfo.match( utilRegex.sqftNum )[0]; }
                 else if ( utilRegex.rent.test(thisfpInfo) ) {
