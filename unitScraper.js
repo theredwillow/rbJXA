@@ -577,7 +577,7 @@ else if ( document.querySelector('#availableFloorplansmsg') ) {
 				if (unitRent) { unitRent = unitRent.innerText.replace(/[$,]/gi,""); }
 				if ( !unitRent || isNaN(unitRent) ) {
 					if (floorplaninfo[3]) { unitRent = floorplaninfo[3].innerHTML; }
-					else { var noRent; }
+					else { var noRent = true; }
 				}
 				
 				info.push({
