@@ -778,22 +778,36 @@ scrapers["watersedgeplano"] = {
 	alert: defaultAlert
 };
 
-// This is the loop that will actually decide which scraper to run and run it
-var found = false;
-for (var s in scrapers) {
-    var scraper = scrapers[s];
-    if (!scraper.check) { continue; }
-    found = true;
+// This is the function used to create the scrape results
+var scrape = function(scraperName) {
+    var scraper = scrapers[scraperName];
     scraper.func();
     if (bail) {
         alert(bail);
-        break;
+        return;
     }
     populateTable();
     if (scraper.select) { utilFuncs.selectElementContents(table); }
     if (scraper.alert) { alert(scraper.alert); }
     if (scraper.hide) { utilFuncs.toggleVis(scraper.hide); }
     console.log( "SCRAPE RESULTS: " + s + " found " + info.length + " units");
-    break;
+};
+
+// This is the loop that will actually decide which scraper to run and run it
+var possibleScrapers = Object.keys(scrapers).filter(function(s) { return scrapers[s].check != null; });
+switch (possibleScrapers.length) {
+
+    case 0:
+        alert("I\'m sorry. This website doesn\'t appear to have a scraper prepared for it yet.");
+        break;
+
+    case 1:
+        scrape(possibleScrapers[0]);
+        break;
+
+    default:
+        alert("There appears to be multiple possible scrapers for this website. Please contact a scraper maker about this. I'm putting both results at the bottom.");
+        for (var s in possibleScrapers) { scrape(s); }
+        break;
+
 }
-if (!found) { alert("I\'m sorry. This website doesn\'t appear to have a scraper prepared for it yet."); }
