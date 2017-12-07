@@ -164,11 +164,14 @@ var updateJsonFile = function() {
 };
 
 // This all creates the table to display the scraped information
+var div = document.createElement('div');
+div.style.border = "thick solid black";
 var table = document.createElement('table');
 table.id = "scrape_results";
 table.style.textAlign = "center";
 table.style.align = "center";
-document.body.appendChild(table);
+document.body.appendChild(div);
+div.appendChild(table);
 function populateTable() {
 
     // Gets the minimum length for leading zeros in units
@@ -207,13 +210,22 @@ function populateTable() {
                     var prevVal = info.listings[thisId[0]][thisId[1]];
                     var newVal = this.innerHTML;
                     if ( prevVal != newVal ) {
+
+                        var existing = info.changes.find(function(l) { return l.i == thisId[0] && l.type == thisId[1]; });
+                        if (existing) {
+                            prevVal = existing.prevVal;
+                            info.changes.splice(info.changes.indexOf(existing), 1);
+                        }
+
+                        if ( prevVal != newVal ) {
+                            info.changes.push({
+                                i: thisId[0],
+                                type: thisId[1],
+                                prevVal: prevVal,
+                                newVal: newVal
+                            });
+                        }
                         info.listings[thisId[0]][thisId[1]] = newVal;
-                        info.changes.push({
-                            i: thisId[0],
-                            type: thisId[1],
-                            prevVal: prevVal,
-                            newVal: newVal
-                        });
                         updateJsonFile();
                         console.log("User updated:", prevVal, "to", newVal);
                     }
@@ -230,27 +242,21 @@ function populateTable() {
 
     if ( warning != "" ) { alert("WARNING!\n" + warning); }
     
-    // Add the additional informaton footer to the table
-    var tr = document.createElement('tr');
-    tr.id = "Additonal-Information";
-    table.appendChild(tr);
-
     // Add the download button for the JSON file
-    var td = document.createElement('td');
     var downloadLink = document.createElement('a');
     downloadLink.id = "downloadAnchorElem";
     downloadLink.innerHTML = "Download the JSON file";
-    downloadLink.setAttribute("download", info.time + "-scrape.json");
-    td.appendChild(downloadLink);
-    tr.appendChild(td);
+    downloadLink.setAttribute("download", location.hostname.replace(/(www\.)|(\..*?$)/gi,"").replace(/[.:]/g,"-") + ".json" );
+    div.appendChild(downloadLink);
     updateJsonFile();
 
 }
 
 var scrapers = {};
+var today = new Date();
 var info = {
     url: window.location.href,
-    time: Date.now(),
+    time: today.toISOString(),
     listings: [],
     changes: []
 };
