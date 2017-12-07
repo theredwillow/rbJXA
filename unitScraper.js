@@ -116,38 +116,38 @@ var utilWarnings = {
     rent:
     [
         function notANumber() {
-			var numbersFound = info[i].rent.match(/[\d,]+/g);
-			if ( numbersFound ) { info[i].rent = Number( numbersFound[0].replace(",", "") ); }
-            else { warning += "-Unit " + info[i].unit + ": rent not a number\n"; }
+			var numbersFound = info.listings[i].rent.match(/[\d,]+/g);
+			if ( numbersFound ) { info.listings[i].rent = Number( numbersFound[0].replace(",", "") ); }
+            else { warning += "-Unit " + info.listings[i].unit + ": rent not a number\n"; }
         }
     ],
 
     sqft:
     [
         function isZero() {
-            if (info[i].sqft == "0") { warning += "-Unit " + info[i].unit + ": sqft of zero\n"; }
+            if (info.listings[i].sqft == "0") { warning += "-Unit " + info.listings[i].unit + ": sqft of zero\n"; }
         }
     ],
 
     baths:
     [
         function catchAll() {
-			if( isNaN(info[i].baths) ) {
-				warning += "-Unit " + info[i].unit + ": baths not a number\n";
+			if( isNaN(info.listings[i].baths) ) {
+				warning += "-Unit " + info.listings[i].unit + ": baths not a number\n";
 			}
 			else {
-				info[i].baths = Number(info[i].baths);
-				if ( info[i].baths == 0 ) {
-					if ( info[i].beds == "0" || info[i].beds == "Studio" ) {
-						info[i].baths = 1;
+				info.listings[i].baths = Number(info.listings[i].baths);
+				if ( info.listings[i].baths == 0 ) {
+					if ( info.listings[i].beds == "0" || info.listings[i].beds == "Studio" ) {
+						info.listings[i].baths = 1;
 					}
 					else {
-						warning += "-Unit " + info[i].unit + ": missing baths\n";
+						warning += "-Unit " + info.listings[i].unit + ": missing baths\n";
 					}
 				}
-				else if (info[i].baths == 0) { warning += "-Unit " + info[i].unit + ": zero baths\n"; }
-				else if (info[i].baths == 0.5) { warning += "-Unit " + info[i].unit + ": 0.5 baths\n"; }
-				else if (info[i].baths % 1 != 0 && (info[i].baths - 0.5) % 1 != 0) { warning += "-Unit " + info[i].unit + ": bath not whole or half number\n"; }
+				else if (info.listings[i].baths == 0) { warning += "-Unit " + info.listings[i].unit + ": zero baths\n"; }
+				else if (info.listings[i].baths == 0.5) { warning += "-Unit " + info.listings[i].unit + ": 0.5 baths\n"; }
+				else if (info.listings[i].baths % 1 != 0 && (info.listings[i].baths - 0.5) % 1 != 0) { warning += "-Unit " + info.listings[i].unit + ": bath not whole or half number\n"; }
 			}
         }
     ]
@@ -158,6 +158,11 @@ var bail = false;  // Will be filled with an alert string if the user needs to d
 var minLength = 4;
 var tdCells = ["unit", "beds", "rent", "sqft", "baths", "date"];
 
+var updateJsonFile = function() {
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(info));
+    document.querySelector("#downloadAnchorElem").setAttribute("href", dataStr );
+};
+
 // This all creates the table to display the scraped information
 var table = document.createElement('table');
 table.id = "scrape_results";
@@ -167,18 +172,18 @@ document.body.appendChild(table);
 function populateTable() {
 
     // Gets the minimum length for leading zeros in units
-	for (i = 0; i < info.length; i++) {
-		info[i].unit = info[i].unit.trim().replace(/[#\s]/g, "");
-		if (info[i].unit.length > minLength) { minLength = info[i].unit.length; }
+	for (i = 0; i < info.listings.length; i++) {
+		info.listings[i].unit = info.listings[i].unit.trim().replace(/[#\s]/g, "");
+		if (info.listings[i].unit.length > minLength) { minLength = info.listings[i].unit.length; }
 	}
 
     // Build the table itself
-	for (i = 0; i < info.length; i++) {
-		var unitId = "unitScraper" + info[i].unit.replace(/\//g,"");
+	for (i = 0; i < info.listings.length; i++) {
+		var unitId = "unitScraper" + info.listings[i].unit.replace(/\//g,"");
 		if ( !document.querySelector("#" + unitId.replace(/\//g,"")) ) {
 			var tr = document.createElement('tr');
 
-			while (info[i].unit.length < minLength) { info[i].unit = "0" + info[i].unit; }
+			while (info.listings[i].unit.length < minLength) { info.listings[i].unit = "0" + info.listings[i].unit; }
 			tr.id = unitId;
 
             for (var j = 0; j < tdCells.length; j++) {
@@ -193,8 +198,28 @@ function populateTable() {
 
                 // Create the unit's cells
                 var td = document.createElement('td');
-                td.innerHTML = info[i][thisTd];
+                var span = document.createElement('span');
+                span.contentEditable = true;
+                span.innerHTML = info.listings[i][thisTd];
+                span.id = i + "___" + thisTd;
+                span.onblur = function () {
+                    var thisId = this.id.split("___");
+                    var prevVal = info.listings[thisId[0]][thisId[1]];
+                    var newVal = this.innerHTML;
+                    if ( prevVal != newVal ) {
+                        info.listings[thisId[0]][thisId[1]] = newVal;
+                        info.changes.push({
+                            i: thisId[0],
+                            type: thisId[1],
+                            prevVal: prevVal,
+                            newVal: newVal
+                        });
+                        updateJsonFile();
+                        console.log("User updated:", prevVal, "to", newVal);
+                    }
+                };
                 td.className = thisTd;
+                td.appendChild(span);
                 tr.appendChild(td);
 
             }
@@ -203,11 +228,32 @@ function populateTable() {
         }
     }
 
-	if ( warning != "" ) { alert("WARNING!\n" + warning); }
+    if ( warning != "" ) { alert("WARNING!\n" + warning); }
+    
+    // Add the additional informaton footer to the table
+    var tr = document.createElement('tr');
+    tr.id = "Additonal-Information";
+    table.appendChild(tr);
+
+    // Add the download button for the JSON file
+    var td = document.createElement('td');
+    var downloadLink = document.createElement('a');
+    downloadLink.id = "downloadAnchorElem";
+    downloadLink.innerHTML = "Download the JSON file";
+    downloadLink.setAttribute("download", info.time + "-scrape.json");
+    td.appendChild(downloadLink);
+    tr.appendChild(td);
+    updateJsonFile();
+
 }
 
 var scrapers = {};
-var info = [];
+var info = {
+    url: window.location.href,
+    time: Date.now(),
+    listings: [],
+    changes: []
+};
 
 // Place various commonly used alert strings here
 var defaultAlert = "A table has been added and highlighted, press command+c after closing this alert and then paste it into your google sheet.";
@@ -236,7 +282,7 @@ scrapers["realpageiframe"] = {
         for (i = 0; i < units.length; i++) {
             var bedbaths = utilFuncs.findAncestor(units[i], "search-results").querySelector('.floorplan-description .pull-left').innerHTML;
             var tds = units[i].querySelectorAll('td');
-            info.push({
+            info.listings.push({
                 unit: tds[1].innerHTML,
                 beds: bedbaths.match(utilRegex.bedNum)[0],
                 rent: tds[2].querySelector('span').innerHTML,
@@ -270,7 +316,7 @@ scrapers["realpage"] = {
             utilFuncs.getcIndex( unitsFound[0].querySelectorAll('th') );
             for (var j = 1; j < unitsFound.length; j++) {
                 var unitInfo = unitsFound[j].querySelectorAll('td');
-                info.push({
+                info.listings.push({
                     unit: unitInfo[ cIndex.unit ].innerText,
                     beds: bed,
                     rent: unitInfo[ cIndex.rent ].innerText,
@@ -292,7 +338,7 @@ scrapers["maac"] = {
         var listing = document.querySelectorAll('div.result');
         for (i = 0; i < listing.length; i++) {
             var lifinder = listing[i].querySelectorAll('li');
-            info.push({
+            info.listings.push({
                 unit: listing[i].querySelector('h3').innerHTML.match(/\d+/g)[0],
                 beds: lifinder[1].innerText.match(/\d+/g)[0],
                 rent: listing[i].querySelector('a.price-range').innerText,
@@ -316,7 +362,7 @@ scrapers["amli"] = {
         var rows = document.querySelectorAll('table.tblSummary tr[class^="highlightRow"]');
         for (i = 0; i < rows.length; i++) {
             var spans = rows[i].querySelectorAll('td div>span');
-            info.push({
+            info.listings.push({
                 unit: spans[1].innerText,
                 beds: bedbath[0].replace(utilRegex.bed, ""),
                 rent: spans[4].innerText,
@@ -343,7 +389,7 @@ scrapers["iuicards"] = {
         for (i = 0; i < units.length; i++) {
             var spans = units[i].querySelectorAll('span');
 
-            info.push({
+            info.listings.push({
                 unit: spans[1].innerHTML.replace("Unit #", ""),
                 beds: beds,
                 rent: spans[0].innerHTML,
@@ -366,7 +412,7 @@ scrapers["gables"] = {
         var units = document.querySelectorAll('.unitrow');
         for (i = 0; i < units.length; i++) {
             var spans = units[i].querySelectorAll('div');
-            info.push({
+            info.listings.push({
                 unit: spans[0].innerHTML.replace(/<.*?>/gi, ""),
                 beds: beds,
                 rent: spans[1].innerHTML.replace(/<.*?>/gi, ""),
@@ -398,7 +444,7 @@ scrapers["emerald"] = {
         }
         for (var i = 0; i < numOfunitRows; i++) {
             var theseCells = unitRows[i].querySelectorAll("td");
-            info.push({
+            info.listings.push({
                 unit: theseCells[ cIndex.unit ].innerText,
                 beds: theseCells[ cIndex.bed ].innerText,
                 rent: theseCells[ cIndex.rent ].innerText,
@@ -419,7 +465,7 @@ scrapers["s2capital"] = {
         var units = document.body.querySelectorAll('div.unit');
         for (i = 0; i < units.length; i++) {
             var spans = units[i].querySelectorAll('.fw .fv');
-            info.push({
+            info.listings.push({
                 unit: units[i].querySelector('.panel-heading h4').innerHTML,
                 beds: spans[1].innerHTML,
                 rent: units[i].querySelector('.rent-value').innerHTML,
@@ -446,7 +492,7 @@ scrapers["friscobridges"] = {
         var sqft = floorplaninfo[2].querySelector('.black').innerHTML.replace(/(\s-\s\d+)? SQ. FT./gi, "");
         for (i = 0; i < unitrows.length; i++) {
             var unitinfo = unitrows[i].querySelectorAll('.unit-detail-link>div');
-            info.push({
+            info.listings.push({
                 unit: unitinfo[0].innerHTML.replace(/<.*?>|(Unit:)/gi, ""),
                 beds: bed,
                 rent: unitinfo[3].innerHTML.replace(/<.*>/gi, ""),
@@ -479,7 +525,7 @@ scrapers["rentcafe"] = {
                 var tds = unitrows[i].querySelectorAll('td');
                 if ( 'date' in cIndex ) { var date = tds[ cIndex.date ].innerHTML.replace(/<.*?>/gi, ""); }
                 else { var date = "Now"; }
-                info.push({
+                info.listings.push({
                     unit: tds[ cIndex.unit ].innerText.replace("#", ""),
                     beds: bedsnbaths.match( utilRegex.bedNum )[0],
                     rent: tds[ cIndex.rent ].innerText,
@@ -507,7 +553,7 @@ scrapers["bell"] = {
             var unitrows = floorplans[i].querySelectorAll('#FloorApplyTable>table tr');
             for (j = 1; j < unitrows.length; j++) {
                 var unitinfo = unitrows[j].querySelectorAll('td');
-                info.push({
+                info.listings.push({
                     unit: unitinfo[0].innerHTML.replace(/<.*?>/gi, ""),
                     beds: bed,
                     rent: unitinfo[2].innerHTML.match(/[\d,]+/g)[0].replace(",",""),
@@ -541,7 +587,7 @@ scrapers["onsite"] = {
             }
             if ("sqft" in cIndex) { var sqft = unitInfo[ cIndex.sqft ].innerText; }
             else { var sqft = bedbathsqft.match( utilRegex.sqftNum )[0]; }
-            info.push({
+            info.listings.push({
                 unit: unitInfo[ cIndex.unit ].innerText,
                 beds: bed,
                 rent: unitInfo[ cIndex.rent ].innerText,
@@ -570,7 +616,7 @@ scrapers["camdenliving"] = {
             utilFuncs.getcIndex( units[0].querySelectorAll('th') );
             for (var j = 1; j < units.length; j++) {
                 var unitInfo = units[j].querySelectorAll('td');
-                info.push({
+                info.listings.push({
                     unit: unitInfo[cIndex.unit].innerText,
                     beds: beds,
                     rent: unitInfo[cIndex.rent].innerText,
@@ -599,7 +645,7 @@ scrapers["kelton"] = {
         utilFuncs.getcIndex( units[0].querySelectorAll('th') );
         for (var i = 1; i < units.length; i++) {
             var unitCells = units[i].querySelectorAll('td');
-            info.push({
+            info.listings.push({
                 unit: unitCells[ cIndex.unit ].innerText,
                 beds: beds,
                 rent: unitCells[ cIndex.rent ].innerText,
@@ -632,7 +678,7 @@ scrapers["fpwidget"] = {
                 var unitRent = unitCells[5].innerText.match(/\$([\d,]{2,})/);
                 if (unitRent) { rent = unitRent[0]; }
             }
-            info.push({
+            info.listings.push({
                 unit: unitCells[0].innerText.replace("Apt: ", ""),
                 beds: beds,
                 rent: rent,
@@ -660,7 +706,7 @@ scrapers["emerybay"] = {
             utilFuncs.getcIndex( fpRows[0].querySelectorAll("th") );
             for (var j = 1; j < fpRows.length; j++) {
                 var theseCells = fpRows[j].querySelectorAll("td");
-                info.push({
+                info.listings.push({
                     unit: theseCells[ cIndex.unit ].innerText,
                     beds: beds,
                     rent: theseCells[ cIndex.rent ].innerText,
@@ -688,7 +734,7 @@ scrapers["brickyards"] = {
         var unitRows = unitsFound.querySelectorAll("tr");
         for (var i = 1; i < unitRows.length; i++) {
             var theseCells = unitRows[i].querySelectorAll("td");
-            info.push({
+            info.listings.push({
                 unit: theseCells[ cIndex.unit ].innerText,
                 beds: bed,
                 rent: theseCells[ cIndex.rent ].innerText,
@@ -728,7 +774,7 @@ scrapers["imtresidential"] = {
                 if ('rent' in cIndex) { rent = theseCells[ cIndex.rent ].innerText.match( utilRegex.num )[0]; }
                 if ('sqft' in cIndex) { sqft = theseCells[ cIndex.sqft ].innerText.match( utilRegex.num )[0]; }
                 if ('bath' in cIndex) { bath = theseCells[ cIndex.bath ].innerText.match( utilRegex.num )[0]; }
-                info.push({
+                info.listings.push({
                     unit: theseCells[ cIndex.unit ].innerText,
                     beds: bed,
                     rent: rent,
@@ -763,7 +809,7 @@ scrapers["watersedgeplano"] = {
             utilFuncs.getcIndex( document.querySelectorAll(".gridheader2") );
             for (var j = 0; j < thesefpTables.length; j++) {
                 var theseCells = unitRows[j].querySelectorAll("td");
-                info.push({
+                info.listings.push({
                     unit: theseCells[ cIndex.unit ].innerText,
                     beds: bed,
                     rent: theseCells[ cIndex.rent ].innerText,
@@ -790,7 +836,7 @@ var scrape = function(scraperName) {
     if (scraper.select) { utilFuncs.selectElementContents(table); }
     if (scraper.alert) { alert(scraper.alert); }
     if (scraper.hide) { utilFuncs.toggleVis(scraper.hide); }
-    console.log( "SCRAPE RESULTS: " + s + " found " + info.length + " units");
+    console.log( "SCRAPE RESULTS: " + scraperName + " found " + info.listings.length + " units", info);
 };
 
 // This is the loop that will actually decide which scraper to run and run it
