@@ -163,13 +163,18 @@ var updateJsonFile = function() {
     document.querySelector("#downloadAnchorElem").setAttribute("href", dataStr );
 };
 
-// This all creates the table to display the scraped information
+// This creates the div to hold the results
 var div = document.createElement('div');
 div.style.border = "thick solid black";
+// This will hold the result title
+var resultSpan = document.createElement('span');
+div.appendChild(resultSpan);
+// This creates the table to display the scraped information
 var table = document.createElement('table');
 table.id = "scrape_results";
 table.style.textAlign = "center";
 table.style.align = "center";
+table.border = "1px solid black";
 document.body.appendChild(div);
 div.appendChild(table);
 function populateTable() {
@@ -179,6 +184,17 @@ function populateTable() {
 		info.listings[i].unit = info.listings[i].unit.trim().replace(/[#\s]/g, "");
 		if (info.listings[i].unit.length > minLength) { minLength = info.listings[i].unit.length; }
 	}
+
+    // Build headers
+    var tr = document.createElement('tr');
+    tr.id = "headers";
+    for (var h = 0; h < tdCells.length; h++) {
+        var th = document.createElement('th');
+        th.style.textAlign = "center";
+        th.innerHTML = tdCells[h];
+        tr.appendChild(th);
+    }
+    table.appendChild(tr);
 
     // Build the table itself
 	for (i = 0; i < info.listings.length; i++) {
@@ -842,7 +858,8 @@ var scrape = function(scraperName) {
     if (scraper.select) { utilFuncs.selectElementContents(table); }
     if (scraper.alert) { alert(scraper.alert); }
     if (scraper.hide) { utilFuncs.toggleVis(scraper.hide); }
-    console.log( "SCRAPE RESULTS: " + scraperName + " found " + info.listings.length + " units", info);
+    resultSpan.innerHTML = "SCRAPE RESULTS: " + scraperName + " found " + info.listings.length + " units";
+    console.log(info);
 };
 
 // This is the loop that will actually decide which scraper to run and run it
