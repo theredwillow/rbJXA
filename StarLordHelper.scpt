@@ -83,7 +83,7 @@ var fromRBDate = `function fromRBDate(dateProvided) {
     	dateProvided = dateProvided.slice(0, 11) + "0" + dateProvided.slice(11, dateProvided.length);
     }
     hours = Number( dateProvided.substr(11, 2) );
-    if ( dateProvided.substr(16, 2) == "PM" ) {
+    if ( dateProvided.substr(16, 2) == "PM" && hours != 12  ) {
     	hours += 12;
       if ( hours == 24 ) {
       	hours = 0;
