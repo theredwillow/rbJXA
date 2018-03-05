@@ -100,9 +100,15 @@ function populateTable(info) {
 			td2.appendChild(beds);
 
 			var td3 = document.createElement('td');
-			var numbersFound = info[i].rent.match(/[\d,]+/g);
-			if ( numbersFound ) { info[i].rent = Number( numbersFound[0].replace(",", "") ); }
-			else { warning += "-Unit " + info[i].unit + ": rent not a number\n"; }
+			if ( info[i].rent ) {
+				var numbersFound = info[i].rent.match(/[\d,]+/g);
+				if ( numbersFound ) { info[i].rent = Number( numbersFound[0].replace(",", "") ); }
+				else { warning += "-Unit " + info[i].unit + ": rent not a number\n"; }
+			}
+			else {
+				info[i].rent = "";
+				warning += "-Unit " + info[i].unit + ": no rent amount was provided\n";
+			}
 			var rent = document.createTextNode(info[i].rent);
 			if (info[i].rent == info[i].sqft) { warning += "-Unit " + info[i].unit + ": sqft equals rent\n"; }
 			td3.appendChild(rent);
