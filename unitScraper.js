@@ -96,6 +96,9 @@ function populateTable(info) {
 			td1.appendChild(unit);
 
 			var td2 = document.createElement('td');
+			if ( !info[i].beds ) {
+				warning += "-Unit " + info[i].unit + ": no bed count was provided\n";
+			}
 			var beds = document.createTextNode(info[i].beds);
 			td2.appendChild(beds);
 
@@ -114,12 +117,14 @@ function populateTable(info) {
 			td3.appendChild(rent);
 
 			var td4 = document.createElement('td');
+			if (!info[i].sqft) { warning += "-Unit " + info[i].unit + ": no sqft was provided\n"; }
+			else if (info[i].sqft == "0") { warning += "-Unit " + info[i].unit + ": sqft of zero\n"; }
 			var sqft = document.createTextNode(info[i].sqft);
-			if (info[i].sqft == "0") { warning += "-Unit " + info[i].unit + ": sqft of zero\n"; }
 			td4.appendChild(sqft);
 
 			var td5 = document.createElement('td');
-			if( isNaN(info[i].baths) ) {
+			if (!info[i].baths) { warning += "-Unit " + info[i].unit + ": no bath count was provided\n"; }
+			else if ( isNaN(info[i].baths) ) {
 				warning += "-Unit " + info[i].unit + ": baths not a number\n";
 			}
 			else {
@@ -140,6 +145,7 @@ function populateTable(info) {
 			td5.appendChild(baths);
 
 			var td6 = document.createElement('td');
+			if (!info[i].date) { warning += "-Unit " + info[i].unit + ": no availability date was provided\n"; }
 			var date = document.createTextNode(info[i].date);
 			td6.appendChild(date);
 
