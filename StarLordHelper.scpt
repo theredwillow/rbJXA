@@ -196,14 +196,14 @@ function selectAllButSevenInfo(doNotIncludePictures) {
 	chrome.execute(starLord.tab, { javascript: `(function () { document.body.querySelector("div.a_popupAnchor button").click(); })();` });
 	chrome.execute(starLord.tab, { javascript: `(function () { document.body.querySelector("div.a_popupAnchor div.smallTxt > span.link").click(); })();` });
 	chrome.execute(starLord.tab, { javascript: `(function () { document.body.querySelectorAll("div.a_popupAnchor div.arrowRight")[2].click(); })();` });
-	for (var i = 4; i < 11; i++) {
+	for (var i = 4; i <= 11; i++) {
 		chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
 		placeAccessKey(`document.body.querySelectorAll("div.a_popupAnchor input")[` + i + `]`);
 		press("anchor", "q");
 	}
 	if ( doNotIncludePictures ) {
 		chrome.execute(starLord.tab, { javascript: deleteAccesskeys });
-		placeAccessKey(`document.body.querySelectorAll("div.a_popupAnchor input")[23]`);
+		placeAccessKey(`document.body.querySelectorAll("div.a_popupAnchor input")[27]`);
 		press("anchor", "q");
 	}
 	chrome.execute(starLord.tab, { javascript: `(function () {
