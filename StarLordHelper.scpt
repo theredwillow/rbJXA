@@ -293,7 +293,7 @@ var cIndex = (function getcIndex() {
 		};
 		var regexTests = {
 			"unit" : /ap(artmen)?t|unit/i,
-			"bed" : /bed/i,
+			"bed" : /bed|bdrm/i,
 			"rent" : /rent|price/i,
 			"sqft" : /sq.*f.*t/i,
 			"bath" : /bath/i,
